@@ -51,23 +51,20 @@ export const ParentDashboard: React.FC = () => {
   // If no children, show onboarding
   if (!children || children.length === 0) {
     return (
-      <div className="space-y-6">
-        <div className="text-center py-12">
-          <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No children registered</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Get started by registering your first child for immunization tracking.
-          </p>
-          <div className="mt-6">
-            <Button
-              variant="primary"
-              onClick={() => navigate(ROUTES.ADD_CHILD)}
-              leftIcon={<PlusCircleIcon className="h-5 w-5" />}
-            >
-              Register Your First Child
-            </Button>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-br from-primary-50 via-accent-50 to-white rounded-2xl shadow-lg p-8">
+        <UserGroupIcon className="mx-auto h-16 w-16 text-accent-400 mb-4" />
+        <h3 className="text-2xl font-bold text-primary-800 mb-2">No children registered</h3>
+        <p className="text-base text-primary-600 mb-6 max-w-md text-center">
+          Get started by registering your first child for immunization tracking and reminders.
+        </p>
+        <Button
+          variant="primary"
+          onClick={() => navigate(ROUTES.ADD_CHILD)}
+          leftIcon={<PlusCircleIcon className="h-5 w-5" />}
+          className="px-6 py-3 rounded-full bg-accent-400 text-primary-900 font-bold shadow hover:bg-accent-300 transition"
+        >
+          Register Your First Child
+        </Button>
       </div>
     );
   }
@@ -77,24 +74,24 @@ export const ParentDashboard: React.FC = () => {
   const recentActivities = dashboard?.recentActivity || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-6xl mx-auto px-4 py-8">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-primary-50 via-white to-accent-50 rounded-2xl shadow p-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {user?.fullName?.split(' ')[0]}! 👋
+          <h1 className="text-3xl font-extrabold text-primary-800 mb-1">
+            Welcome back, {user?.fullName?.split(' ')[0]}! <span className="text-accent-400">👋</span>
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Here's an overview of your children's immunization status
+          <p className="text-base text-primary-600">
+            Here&apos;s an overview of your children&apos;s immunization status
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
             leftIcon={<BellIcon className="h-4 w-4" />}
             onClick={() => navigate(ROUTES.NOTIFICATIONS)}
-            className="relative"
+            className="relative border-accent-400 text-accent-700 hover:bg-accent-50"
           >
             Notifications
             {unreadCount > 0 && (
@@ -108,6 +105,7 @@ export const ParentDashboard: React.FC = () => {
             size="sm"
             leftIcon={<PlusCircleIcon className="h-4 w-4" />}
             onClick={() => navigate(ROUTES.ADD_CHILD)}
+            className="bg-accent-400 text-primary-900 font-bold hover:bg-accent-300 px-5"
           >
             Add Child
           </Button>
@@ -115,7 +113,7 @@ export const ParentDashboard: React.FC = () => {
       </div>
 
       {/* Child Selector */}
-      <div className="flex space-x-2 overflow-x-auto pb-2">
+      <div className="flex space-x-3 overflow-x-auto pb-2">
         {children.map((child: Child) => (
           <button
             key={child.id}

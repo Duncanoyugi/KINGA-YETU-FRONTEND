@@ -45,8 +45,8 @@ export const childrenAPI = createApi({
       providesTags: (_result, _error, id) => [{ type: 'Child', id }],
     }),
 
-    getChildrenByParent: builder.query<Child[], string>({
-      query: (parentId) => `/parent/${parentId}`,
+    getChildrenByParent: builder.query<Child[], void>({
+      query: () => '/my-children',
       providesTags: ['Children'],
     }),
 
@@ -217,18 +217,8 @@ export const childrenAPI = createApi({
     }),
 
     // Batch operations
-    getChildrenByFacility: builder.query<Child[], string>({
-      query: (facilityId) => `/facility/${facilityId}`,
-      providesTags: ['Children'],
-    }),
-
-    searchChildren: builder.query<Child[], { searchTerm: string; facilityId?: string }>({
-      query: (params) => ({
-        url: '/search',
-        params,
-      }),
-      providesTags: ['Children'],
-    }),
+    // Facility-level child listing is not implemented directly on children controller yet.
+    // Use reports/analytics endpoints for facility views instead, or add a dedicated backend route.
   }),
 });
 
@@ -269,7 +259,4 @@ export const {
   // Dashboard
   useGetChildDashboardQuery,
 
-  // Batch operations
-  useGetChildrenByFacilityQuery,
-  useSearchChildrenQuery,
 } = childrenAPI;

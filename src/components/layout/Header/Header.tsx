@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/features/auth/authHooks';
 import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -25,6 +26,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </div>
 
           <div className="flex-1 flex justify-end items-center space-x-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Notifications */}
             <button className="relative p-2 text-gray-400 hover:text-gray-500">
               <BellIcon className="h-6 w-6" />

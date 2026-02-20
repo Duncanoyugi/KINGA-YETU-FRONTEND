@@ -75,39 +75,47 @@ export const HealthWorkerDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Good {new Date().getHours() < 12 ? 'Morning' : 'Afternoon'}, {user?.fullName?.split(' ')[0]}! 👋
+    <div className="space-y-8">
+      {/* Hero/Header with Unsplash background */}
+      <div className="relative rounded-2xl overflow-hidden shadow-lg h-48 md:h-56 flex items-center justify-between bg-gradient-to-r from-primary-600/90 to-secondary-600/80">
+        <img
+          src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=900&q=80"
+          alt="Health Worker Hero"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-60"
+        />
+        <div className="relative z-10 flex-1 px-8 py-8 md:py-10">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-lg">
+            Good {new Date().getHours() < 12 ? 'Morning' : 'Afternoon'}, {user?.fullName?.split(' ')[0]}! <span className="inline-block">👩‍⚕️</span>
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-2 text-lg text-white/90 max-w-xl drop-shadow">
             {user?.healthWorker?.facility?.name} • {formatDate(new Date().toISOString(), 'EEEE, MMMM d, yyyy')}
           </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="secondary"
+              size="md"
+              leftIcon={<ClipboardDocumentListIcon className="h-5 w-5" />}
+              className="bg-accent-600 hover:bg-accent-700 text-white shadow"
+              onClick={() => navigate(ROUTES.VACCINE_INVENTORY)}
+            >
+              Inventory
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              leftIcon={<PlusCircleIcon className="h-5 w-5" />}
+              className="bg-primary-700 hover:bg-primary-800 text-white shadow"
+              onClick={() => navigate(ROUTES.ADD_CHILD)}
+            >
+              Register Child
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<ClipboardDocumentListIcon className="h-4 w-4" />}
-            onClick={() => navigate(ROUTES.VACCINE_INVENTORY)}
-          >
-            Inventory
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<PlusCircleIcon className="h-4 w-4" />}
-            onClick={() => navigate(ROUTES.ADD_CHILD)}
-          >
-            Register Child
-          </Button>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-700/80 to-accent-700/60" />
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatsCard
           title="Today's Appointments"
           value={todayAppointments.length}
@@ -140,7 +148,7 @@ export const HealthWorkerDashboard: React.FC = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Appointments */}
         <div className="lg:col-span-2 space-y-6">
           {/* Search and Tabs */}

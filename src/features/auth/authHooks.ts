@@ -8,8 +8,6 @@ import {
   useGetCurrentUserQuery,
   useChangePasswordMutation,
   useUpdateProfileMutation,
-  useRequestOTPMutation,
-  useVerifyOTPMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
 } from './authAPI';
@@ -22,7 +20,7 @@ import {
   clearError,
 } from './authSlice';
 import { ROUTES } from '@/routing/routes';
-import type { LoginCredentials, RegisterData, User, OtpType } from './authTypes';
+import type { LoginCredentials, RegisterData, User } from './authTypes';
 import { toast } from 'react-hot-toast';
 
 // Main auth hook for authentication state and actions
@@ -54,7 +52,10 @@ export const useAuth = () => {
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
       const response = await loginMutation(credentials).unwrap();
-      dispatch(setCredentials(response));
+      dispatch(setCredentials({
+        user: response.user,
+        token: response.accessToken,
+      }));
       toast.success(`Welcome back, ${response.user.fullName}!`);
       
       // Redirect based on role
@@ -86,7 +87,10 @@ export const useAuth = () => {
   const register = useCallback(async (userData: RegisterData) => {
     try {
       const response = await registerMutation(userData).unwrap();
-      dispatch(setCredentials(response));
+      dispatch(setCredentials({
+        user: response.user,
+        token: response.accessToken,
+      }));
       toast.success('Registration successful! Please verify your email.');
       navigate(ROUTES.VERIFY_EMAIL);
       return response;
@@ -114,7 +118,7 @@ export const useAuth = () => {
   // Change password
   const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
     try {
-      await changePasswordMutation({ currentPassword, newPassword }).unwrap();
+      await changePasswordMutation({ currentPassword, newPassword, confirmNewPassword: newPassword }).unwrap();
       toast.success('Password changed successfully');
       return true;
     } catch (error: any) {
@@ -142,9 +146,11 @@ export const useAuth = () => {
   }, [dispatch]);
 
   // Expose resetPassword directly for pages that expect it on useAuth
-  const resetPassword = useCallback(async (email: string, otp: string, newPassword: string) => {
-    const result = await dispatch(authAPI.endpoints.resetPassword.initiate({ email, otp, newPassword }));
-    return (result as any);
+  const resetPassword = useCallback(async (otpCode: string, newPassword: string, confirmNewPassword: string) => {
+    const result = await dispatch(
+      authAPI.endpoints.resetPassword.initiate({ otpCode, newPassword, confirmNewPassword })
+    );
+    return result as any;
   }, [dispatch]);
 
   // Check if user has specific role
@@ -183,35 +189,6 @@ export const useAuth = () => {
   };
 };
 
-// Hook for OTP operations
-export const useOTP = () => {
-  const [requestOTPMutation] = useRequestOTPMutation();
-  const [verifyOTPMutation] = useVerifyOTPMutation();
-
-  const requestOTP = useCallback(async (email?: string, phone?: string, type: OtpType = 'EMAIL_VERIFICATION') => {
-    try {
-      await requestOTPMutation({ email, phone, type }).unwrap();
-      toast.success('OTP sent successfully');
-      return true;
-    } catch (error: any) {
-      toast.error(error.data?.message || 'Failed to send OTP');
-      throw error;
-    }
-  }, [requestOTPMutation]);
-
-  const verifyOTP = useCallback(async (code: string, email?: string, phone?: string, type: OtpType = 'EMAIL_VERIFICATION') => {
-    try {
-      const response = await verifyOTPMutation({ code, email, phone, type }).unwrap();
-      toast.success('OTP verified successfully');
-      return response.verified;
-    } catch (error: any) {
-      toast.error(error.data?.message || 'Invalid OTP');
-      throw error;
-    }
-  }, [verifyOTPMutation]);
-
-  return { requestOTP, verifyOTP };
-};
 
 // Hook for password management
 export const usePasswordManagement = () => {
@@ -229,9 +206,9 @@ export const usePasswordManagement = () => {
     }
   }, [forgotPasswordMutation]);
 
-  const resetPassword = useCallback(async (email: string, otp: string, newPassword: string) => {
+  const resetPassword = useCallback(async (data: { otpCode: string; newPassword: string; confirmNewPassword: string }) => {
     try {
-      await resetPasswordMutation({ email, otp, newPassword }).unwrap();
+      await resetPasswordMutation(data).unwrap();
       toast.success('Password reset successful. Please login with your new password.');
       return true;
     } catch (error: any) {

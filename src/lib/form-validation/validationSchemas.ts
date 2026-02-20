@@ -56,7 +56,7 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(1, messages.required),
+  otpCode: z.string().min(6, 'OTP must be at least 6 digits'),
   newPassword: z.string().min(8, messages.minLength(8)).regex(
     VALIDATION_PATTERNS.PASSWORD,
     messages.password

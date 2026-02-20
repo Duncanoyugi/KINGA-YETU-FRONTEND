@@ -90,12 +90,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await loginMutation({ email, password }).unwrap();
 
       // Store token
-      setToken(response.token);
+      setToken(response.accessToken);
 
       // Update Redux state
       dispatch(setCredentials({
         user: response.user,
-        token: response.token
+        token: response.accessToken
       }));
 
       toast.success(`Welcome back, ${response.user.fullName}!`);

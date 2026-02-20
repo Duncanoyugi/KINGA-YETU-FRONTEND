@@ -1,4 +1,11 @@
 export const ROUTES = {
+  // Public / Landing
+  HOME: '/',
+  ABOUT: '/about',
+  SERVICES: '/services',
+  RESOURCES: '/resources',
+  CONTACT: '/contact',
+
   // Main Dashboard
   DASHBOARD: '/dashboard',
   LOGIN: '/auth/login',
@@ -69,9 +76,12 @@ export const ROUTES = {
   GEOGRAPHIC_ANALYTICS: '/analytics/geographic',
 
   // Misc
-  CONTACT: '/contact',
   APPOINTMENTS: '/appointments',
   REMINDERS: '/reminders',
+
+  // Legal
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
 };
 
 export default ROUTES;

@@ -118,8 +118,9 @@ export interface RegisterData {
 
 export interface AuthResponse {
   user: User;
-  token: string;
-  refreshToken: string;
+  accessToken: string;
+  refreshToken?: string;
+  message?: string;
 }
 
 export interface OtpRequest {
@@ -136,14 +137,15 @@ export interface OtpVerification {
 }
 
 export interface PasswordResetRequest {
-  email: string;
-  otp: string;
+  otpCode: string;
   newPassword: string;
+  confirmNewPassword: string;
 }
 
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
+  confirmNewPassword: string;
 }
 
 // State interface

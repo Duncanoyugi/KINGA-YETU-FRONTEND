@@ -4,10 +4,10 @@ import type {
   LoginCredentials, 
   RegisterData, 
   User,
-  OtpRequest,
-  OtpVerification,
   PasswordResetRequest,
-  ChangePasswordRequest
+  ChangePasswordRequest,
+  OtpRequest,
+  OtpVerification
 } from './authTypes';
 import type { RootState } from '@/app/store/store';
 import { API_URL } from '@/config/environment';
@@ -25,6 +25,22 @@ export const authAPI = createApi({
     },
   }),
   endpoints: (builder) => ({
+        // OTP endpoints
+        requestOTP: builder.mutation<any, OtpRequest>({
+          query: (data) => ({
+            url: '/otp/generate',
+            method: 'POST',
+            body: data,
+          }),
+        }),
+
+        verifyOTP: builder.mutation<{ valid: boolean }, OtpVerification>({
+          query: (data) => ({
+            url: '/otp/verify',
+            method: 'POST',
+            body: data,
+          }),
+        }),
     // Public endpoints
     login: builder.mutation<AuthResponse, LoginCredentials>({
       query: (credentials) => ({
@@ -49,27 +65,10 @@ export const authAPI = createApi({
       }),
     }),
 
-    // OTP endpoints
-    requestOTP: builder.mutation<void, OtpRequest>({
-      query: (data) => ({
-        url: '/otp/request',
-        method: 'POST',
-        body: data,
-      }),
-    }),
-
-    verifyOTP: builder.mutation<{ verified: boolean }, OtpVerification>({
-      query: (data) => ({
-        url: '/otp/verify',
-        method: 'POST',
-        body: data,
-      }),
-    }),
-
     // Password management
     forgotPassword: builder.mutation<void, { email: string }>({
       query: (data) => ({
-        url: '/password/forgot',
+        url: '/request-password-reset',
         method: 'POST',
         body: data,
       }),
@@ -77,7 +76,7 @@ export const authAPI = createApi({
 
     resetPassword: builder.mutation<void, PasswordResetRequest>({
       query: (data) => ({
-        url: '/password/reset',
+        url: '/reset-password',
         method: 'POST',
         body: data,
       }),
@@ -85,8 +84,8 @@ export const authAPI = createApi({
 
     changePassword: builder.mutation<void, ChangePasswordRequest>({
       query: (data) => ({
-        url: '/password/change',
-        method: 'POST',
+        url: '/change-password',
+        method: 'PATCH',
         body: data,
       }),
     }),
@@ -103,7 +102,7 @@ export const authAPI = createApi({
       }),
     }),
 
-    verifyEmail: builder.mutation<void, { token: string }>({
+    verifyEmail: builder.mutation<void, { email: string; otpCode: string }>({
       query: (data) => ({
         url: '/verify-email',
         method: 'POST',
@@ -111,9 +110,9 @@ export const authAPI = createApi({
       }),
     }),
 
-    verifyPhone: builder.mutation<void, { code: string }>({
+    verifyPhone: builder.mutation<void, { email: string; code: string; type: string }>({
       query: (data) => ({
-        url: '/verify-phone',
+        url: '/otp/verify',
         method: 'POST',
         body: data,
       }),
@@ -141,8 +140,6 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useLogoutMutation,
-  useRequestOTPMutation,
-  useVerifyOTPMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useChangePasswordMutation,
@@ -152,4 +149,6 @@ export const {
   useVerifyPhoneMutation,
   useUpdateProfileMutation,
   useDeactivateAccountMutation,
+  useRequestOTPMutation,
+  useVerifyOTPMutation,
 } = authAPI;

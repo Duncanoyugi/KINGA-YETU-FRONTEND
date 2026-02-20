@@ -7,8 +7,6 @@ import {
   useLogoutMutation,
   useGetCurrentUserQuery,
   useRefreshTokenMutation,
-  useRequestOTPMutation,
-  useVerifyOTPMutation,
 } from '@/features/auth/authAPI';
 import {
   setCredentials,
@@ -17,7 +15,7 @@ import {
   setLoading,
   setError,
 } from '@/features/auth/authSlice';
-import type { LoginCredentials, RegisterData, User, OtpType } from '@/features/auth/authTypes';
+import type { LoginCredentials, RegisterData, User } from '@/features/auth/authTypes';
 import { useLocalStorage } from './useLocalStorage';
 import { useToast } from './useToast';
   import { authAPI } from '@/features/auth/authAPI';
@@ -39,8 +37,6 @@ export const useAuth = () => {
   const [registerMutation, { isLoading: isRegistering }] = useRegisterMutation();
   const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation();
   const [refreshTokenMutation] = useRefreshTokenMutation();
-  const [requestOTPMutation, { isLoading: isRequestingOTP }] = useRequestOTPMutation();
-  const [verifyOTPMutation, { isLoading: isVerifyingOTP }] = useVerifyOTPMutation();
 
   // Get current user data
   const { data: userData, refetch: refetchUser } = useGetCurrentUserQuery(undefined, {
@@ -81,7 +77,10 @@ export const useAuth = () => {
     dispatch(setLoading(true));
     try {
       const response = await loginMutation(credentials).unwrap();
-      dispatch(setCredentials(response));
+      dispatch(setCredentials({
+        user: response.user,
+        token: response.accessToken
+      }));
       showToast({
         type: 'success',
         message: `Welcome back, ${response.user.fullName}!`,
@@ -110,12 +109,20 @@ export const useAuth = () => {
     dispatch(setLoading(true));
     try {
       const response = await registerMutation(userData).unwrap();
-      dispatch(setCredentials(response));
+      
+      // Store the email for OTP verification
+      localStorage.setItem('pendingVerificationEmail', userData.email);
+      
       showToast({
         type: 'success',
-        message: 'Registration successful! Please verify your email.',
+        message: response.message || 'Registration successful! Please verify your email.',
       });
-      navigate(ROUTES.VERIFY_EMAIL);
+      
+      // Navigate to OTP verification page with the email
+      navigate(ROUTES.VERIFY_EMAIL, {
+        state: { email: userData.email }
+      });
+      
       return response;
     } catch (error: any) {
       const message = error.data?.message || 'Registration failed';
@@ -162,47 +169,27 @@ export const useAuth = () => {
   }, [refreshTokenMutation, handleLogout]);
 
   // OTP handlers
-  const requestOTP = useCallback(async (data: { email?: string; phone?: string; type?: OtpType }) => {
+  const [requestOTPMutation] = authAPI.useRequestOTPMutation();
+  const [verifyOTPMutation] = authAPI.useVerifyOTPMutation();
+
+  const requestOTP = useCallback(async (data: import('@/features/auth/authTypes').OtpRequest) => {
     try {
-      await requestOTPMutation({ 
-        email: data.email, 
-        phone: data.phone, 
-        type: data.type || 'EMAIL_VERIFICATION' 
-      }).unwrap();
-      showToast({
-        type: 'success',
-        message: 'OTP sent successfully',
-      });
+      await requestOTPMutation(data).unwrap();
+      showToast({ type: 'success', message: 'OTP sent successfully' });
       return true;
     } catch (error: any) {
-      const message = error.data?.message || 'Failed to send OTP';
-      showToast({
-        type: 'error',
-        message,
-      });
+      showToast({ type: 'error', message: error.data?.message || 'Failed to send OTP' });
       throw error;
     }
   }, [requestOTPMutation, showToast]);
 
-  const verifyOTP = useCallback(async (data: { code: string; email?: string; phone?: string; type?: OtpType }) => {
+  const verifyOTP = useCallback(async (data: import('@/features/auth/authTypes').OtpVerification) => {
     try {
-      const response = await verifyOTPMutation({ 
-        code: data.code, 
-        email: data.email, 
-        phone: data.phone,
-        type: data.type || 'EMAIL_VERIFICATION' 
-      }).unwrap();
-      showToast({
-        type: 'success',
-        message: 'OTP verified successfully',
-      });
-      return response.verified;
+      const response = await verifyOTPMutation(data).unwrap();
+      showToast({ type: 'success', message: 'OTP verified successfully' });
+      return response.valid;
     } catch (error: any) {
-      const message = error.data?.message || 'Invalid OTP';
-      showToast({
-        type: 'error',
-        message,
-      });
+      showToast({ type: 'error', message: error.data?.message || 'Invalid OTP' });
       throw error;
     }
   }, [verifyOTPMutation, showToast]);
@@ -264,7 +251,7 @@ export const useAuth = () => {
     // State
     user,
     token,
-    isLoading: isLoading || isLoggingIn || isRegistering || isLoggingOut || isRequestingOTP || isVerifyingOTP,
+    isLoading: isLoading || isLoggingIn || isRegistering || isLoggingOut,
     error,
     isAuthenticated,
     // Stored values for persistence
@@ -287,13 +274,13 @@ export const useAuth = () => {
     logout: handleLogout,
     refreshToken,
     refetchUser,
-    requestOTP,
-    verifyOTP,
     
     // Utilities
     getDashboardRoute,
     // aliases
     resetPassword,
     clearError: clearAuthError,
+    requestOTP,
+    verifyOTP,
   };
 };
