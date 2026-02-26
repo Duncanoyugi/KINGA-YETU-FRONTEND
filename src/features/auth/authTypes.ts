@@ -93,10 +93,11 @@ export type HealthFacilityType =
   | 'MOBILE_CLINIC' 
   | 'PRIVATE_PRACTICE';
 
-// DTOs for API requests/responses
+// DTOs for API requests/responses - MATCHING BACKEND EXACTLY
 export interface LoginCredentials {
   email: string;
   password: string;
+  // Backend doesn't expect rememberMe in the DTO
 }
 
 export interface RegisterData {
@@ -105,15 +106,25 @@ export interface RegisterData {
   fullName: string;
   phoneNumber?: string;
   role?: UserRole;
+  acceptTerms: boolean; // Note: acceptTerms, not termsAccepted
+  // These are optional and will be sent in the profile if provided
   dateOfBirth?: string;
   gender?: Gender;
   idNumber?: string;
   county?: string;
   subCounty?: string;
+  address?: string;
   // For health workers
   licenseNumber?: string;
   qualification?: string;
+  specialization?: string;
   facilityId?: string;
+  // For parents
+  emergencyContact?: string;
+  emergencyPhone?: string;
+  // For admins
+  department?: string;
+  permissions?: string;
 }
 
 export interface AuthResponse {
@@ -154,4 +165,6 @@ export interface AuthState {
   token: string | null;
   isLoading: boolean;
   error: string | null;
+  // Flag to track if user was explicitly logged out - requires re-login
+  loggedOut: boolean;
 }

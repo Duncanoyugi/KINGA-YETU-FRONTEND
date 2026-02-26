@@ -172,6 +172,15 @@ export const analyticsAPI = createApi({
       }),
       providesTags: ['Dashboard'],
     }),
+
+    // County Admin Dashboard
+    getCountyAdminDashboard: builder.query<any, string | void>({
+      query: (county) => ({
+        url: '/county-dashboard',
+        params: county ? { county } : {},
+      }),
+      providesTags: ['Dashboard'],
+    }),
   }),
 });
 
@@ -192,6 +201,9 @@ export const {
   useGetComparativeAnalyticsQuery,
   useGetRealTimeStatsQuery,
   useGetAlertAnalyticsQuery,
+  
+  // County Admin Dashboard
+  useGetCountyAdminDashboardQuery,
   
   // Export
   useExportAnalyticsMutation,

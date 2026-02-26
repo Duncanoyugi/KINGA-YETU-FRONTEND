@@ -12,4 +12,5 @@ export interface StatsCardProps {
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
   loading?: boolean;
   className?: string;
+  onClick?: () => void;
 }

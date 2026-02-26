@@ -4,7 +4,7 @@ import { setCredentials, logout, updateUser } from '@/features/auth/authSlice';
 import {
   useLoginMutation,
   useLogoutMutation,
-  useGetCurrentUserQuery,
+  useLazyGetCurrentUserQuery,
 } from '@/features/auth/authAPI';
 import type { User } from '@/features/auth/authTypes';
 import { getToken, removeToken, setToken } from '@/services/storage/localStorage';
@@ -31,17 +31,18 @@ export const useAuth = () => {
   return context;
 };
 
+// Storage key for logout flag
+const LOGOUT_FLAG_KEY = 'immunitrack_logged_out';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, loggedOut } = useAppSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(true)
 
   // RTK Query mutations and queries
   const [loginMutation] = useLoginMutation();
   const [logoutMutation] = useLogoutMutation();
-  const { refetch: refetchCurrentUser } = useGetCurrentUserQuery(undefined, {
-    skip: true, // Only manually fetch when needed
-  });
+  const [triggerGetCurrentUser] = useLazyGetCurrentUserQuery();
 
   // Check if user has specific role(s)
   const hasRole = useCallback((roles: string | string[]): boolean => {
@@ -71,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      const userData = await refetchCurrentUser().unwrap();
+      const userData = await triggerGetCurrentUser().unwrap();
       dispatch(updateUser(userData));
     } catch (error) {
       console.error('Failed to refresh user:', error);
@@ -81,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  }, [dispatch, refetchCurrentUser]);
+  }, [dispatch, triggerGetCurrentUser]);
 
   // Login function
   const login = useCallback(async (email: string, password: string) => {
@@ -92,11 +93,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Store token
       setToken(response.accessToken);
 
-      // Update Redux state
+      // Update Redux State - setCredentials clears loggedOut flag
       dispatch(setCredentials({
         user: response.user,
         token: response.accessToken
       }));
+
+      // Clear logout flag from localStorage
+      localStorage.removeItem(LOGOUT_FLAG_KEY);
 
       toast.success(`Welcome back, ${response.user.fullName}!`);
     } catch (error: unknown) {
@@ -119,6 +123,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       // Clear local storage and state regardless of API response
       removeToken();
+      // Set logout flag to require re-login
+      localStorage.setItem(LOGOUT_FLAG_KEY, 'true');
       dispatch(logout());
       toast.success('Logged out successfully');
       setIsLoading(false);
@@ -128,19 +134,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Check authentication status on mount
   useEffect(() => {
     const initAuth = async () => {
+      // Check if user was explicitly logged out - require re-login
+      const wasLoggedOut = localStorage.getItem(LOGOUT_FLAG_KEY) === 'true';
+      
+      if (wasLoggedOut) {
+        // User was logged out - don't restore session even if token exists
+        // Clear any existing token
+        removeToken();
+        setIsLoading(false);
+        return;
+      }
+
       const token = getToken();
 
       if (token) {
         try {
           // Validate token and get user data
-          const userData = await refetchCurrentUser().unwrap();
+          const userData = await triggerGetCurrentUser().unwrap();
           dispatch(setCredentials({
             user: userData,
             token
           }));
-        } catch (error) {
-          console.error('Invalid token:', error);
-          removeToken();
+        } catch (error: unknown) {
+          const err = error as { status?: number; data?: unknown };
+          console.error('Invalid token:', err);
+          
+          // Handle 401 Unauthorized - clear token and dispatch logout
+          if (err.status === 401) {
+            removeToken();
+            dispatch(logout());
+          }
         }
       }
 
@@ -148,12 +171,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initAuth();
-  }, [dispatch, refetchCurrentUser]);
+  }, [dispatch, triggerGetCurrentUser]);
 
   const value = {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !loggedOut,
     login,
     logout: logoutUser,
     refreshUser,

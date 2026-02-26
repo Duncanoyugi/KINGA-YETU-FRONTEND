@@ -11,6 +11,7 @@ import { analyticsAPI } from '@/features/analytics/analyticsAPI';
 import { notificationsAPI } from '@/features/notifications/notificationsAPI';
 import { facilitiesAPI } from '@/features/facilities/facilitiesAPI';
 import { schedulesAPI } from '@/features/schedules/schedulesAPI';
+import { usersAPI } from '@/features/users/usersAPI';
 
 // Custom middleware for logging actions in development
 // Using type assertion to handle Redux Toolkit's middleware type
@@ -77,7 +78,8 @@ export const store = configureStore({
       analyticsAPI.middleware,
       notificationsAPI.middleware,
       facilitiesAPI.middleware,
-      schedulesAPI.middleware
+      schedulesAPI.middleware,
+      usersAPI.middleware
     ) as unknown as ReturnType<typeof getDefaultMiddleware>,
   devTools: import.meta.env.PROD !== true,
 });

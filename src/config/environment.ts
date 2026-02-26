@@ -10,9 +10,9 @@ export type Environment = 'development' | 'staging' | 'production';
 export const NODE_ENV = (import.meta.env.MODE as Environment) || 'development';
 
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 export const API_URL = `${API_BASE_URL}/api`;
-export const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:5000';
+export const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
 
 // App Configuration
 export const APP_NAME = import.meta.env.VITE_APP_NAME || 'ImmuniTrack Kenya';

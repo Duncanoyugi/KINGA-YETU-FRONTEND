@@ -2,12 +2,13 @@ import React from 'react';
 import type { ButtonProps } from './Button.types';
 import { Spinner } from '../Spinner';
 
-const variantClasses = {
+const variantClasses: Record<string, string> = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 disabled:bg-primary-300',
   secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 disabled:bg-secondary-300',
   outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-primary-500 disabled:bg-gray-100',
   ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500 disabled:text-gray-400',
   danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
+  link: 'text-primary-600 hover:text-primary-800 hover:underline focus:ring-primary-500 disabled:text-gray-400',
 };
 
 const sizeClasses = {

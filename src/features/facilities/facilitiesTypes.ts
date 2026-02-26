@@ -15,13 +15,20 @@ export interface Facility {
   status: FacilityStatus;
   services: string[];
   operatingHours: OperatingHours;
+  // Additional properties used in FacilityManagement
+  mflCode?: string | null;
+  staffCount?: number | null;
+  bedCapacity?: number | null;
+  level?: FacilityLevel | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export type FacilityType = 'HOSPITAL' | 'HEALTH_CENTER' | 'DISPENSARY' | 'CLINIC';
+export type FacilityType = 'HOSPITAL' | 'HEALTH_CENTER' | 'DISPENSARY' | 'CLINIC' | 'MOBILE_CLINIC' | 'PRIVATE_PRACTICE' | 'MATERNITY' | 'NURSING_HOME';
 
-export type FacilityStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED';
+export type FacilityStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED' | 'OPERATIONAL' | 'NON_OPERATIONAL' | 'UNDER_CONSTRUCTION' | 'CLOSED' | 'TEMPORARILY_CLOSED';
+
+export type FacilityLevel = 'LEVEL_1' | 'LEVEL_2' | 'LEVEL_3' | 'LEVEL_4' | 'LEVEL_5' | 'LEVEL_6';
 
 export interface OperatingHours {
   monday: TimeRange;

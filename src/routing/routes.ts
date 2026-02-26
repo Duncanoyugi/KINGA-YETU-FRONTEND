@@ -66,6 +66,14 @@ export const ROUTES = {
   FACILITY_DETAILS: '/admin/facilities/:id',
   EDIT_FACILITY: '/admin/facilities/:id/edit',
   SYSTEM_CONFIG: '/admin/system',
+  VACCINE_MANAGEMENT: '/vaccines/management',
+  AUDIT_LOGS: '/admin/audit-logs',
+  COVERAGE_MAP: '/analytics/coverage-map',
+  SYSTEM_HEALTH: '/admin/system-health',
+  SECURITY: '/admin/security',
+  DATABASE: '/admin/database',
+  LOGOUT: '/auth/logout',
+  SECURITY_SCAN: '/admin/security/scan',
 
   // Analytics
   ANALYTICS_OVERVIEW: '/analytics',
@@ -77,7 +85,27 @@ export const ROUTES = {
 
   // Misc
   APPOINTMENTS: '/appointments',
+  APPOINTMENTS_NEW: '/appointments/new',
+  SETTINGS: '/settings',
   REMINDERS: '/reminders',
+  VACCINES: '/vaccines',
+
+  // Health Tips & Activity
+  HEALTH_TIPS: '/health-tips',
+  ACTIVITY_HISTORY: '/activity-history',
+
+  // Growth Tracking
+  GROWTH_TRACKING: '/growth-tracking',
+  GROWTH_TRACKING_NEW: '/growth-tracking/new',
+
+  // Certificates
+  CERTIFICATES: '/certificates',
+  CERTIFICATES_CHILD: '/certificates/:childId',
+
+  // Immunizations (for parent view)
+  IMMUNIZATIONS: '/immunizations',
+  VACCINATION_HISTORY: '/vaccination-history/:childId',
+  VACCINATIONS: '/vaccinations',
 
   // Legal
   TERMS: '/terms',

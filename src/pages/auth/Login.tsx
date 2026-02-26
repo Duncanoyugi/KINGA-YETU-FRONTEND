@@ -15,9 +15,10 @@ import './Login.css';
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const { login, isLoading, error, clearError, isAuthenticated, getDashboardRoute, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   const {
     register,
@@ -33,12 +34,26 @@ export const Login: React.FC = () => {
     },
   });
 
+  // Check for verification success in location state
   useEffect(() => {
-    if (isAuthenticated) {
-      const from = (location.state as any)?.from?.pathname || ROUTES.DASHBOARD;
-      navigate(from, { replace: true });
+    const state = location.state as any;
+    if (state?.verificationSuccess) {
+      setVerificationSuccess(true);
+      if (state.email) {
+        setValue('email', state.email);
+      }
+      // Clear the state to prevent showing message on refresh
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [location, navigate, setValue]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Get the dashboard route based on actual user role from auth state
+      const dashboardRoute = getDashboardRoute(user.role);
+      navigate(dashboardRoute, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, getDashboardRoute]);
 
   useEffect(() => {
     return () => {
@@ -48,7 +63,12 @@ export const Login: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data);
+      // Transform form data to match backend DTO (exclude rememberMe)
+      const loginData = {
+        email: data.email,
+        password: data.password,
+      };
+      await login(loginData);
     } catch (error) {}
   };
 
@@ -103,6 +123,14 @@ export const Login: React.FC = () => {
                 Access your immunization dashboard
               </p>
             </div>
+
+            {verificationSuccess && (
+              <Alert
+                variant="success"
+                message="Email verified successfully! Please sign in to continue."
+                className="mb-6 animate-slideDown"
+              />
+            )}
 
             {error && (
               <Alert

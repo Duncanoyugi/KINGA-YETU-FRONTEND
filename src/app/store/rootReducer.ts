@@ -23,6 +23,7 @@ import { analyticsAPI } from '@/features/analytics/analyticsAPI';
 import { notificationsAPI } from '@/features/notifications/notificationsAPI';
 import { facilitiesAPI } from '@/features/facilities/facilitiesAPI';
 import { schedulesAPI } from '@/features/schedules/schedulesAPI';
+import { usersAPI } from '@/features/users/usersAPI';
 
 export const rootReducer = combineReducers({
   // Feature slice reducers
@@ -48,6 +49,7 @@ export const rootReducer = combineReducers({
   [notificationsAPI.reducerPath]: notificationsAPI.reducer,
   [facilitiesAPI.reducerPath]: facilitiesAPI.reducer,
   [schedulesAPI.reducerPath]: schedulesAPI.reducer,
+  [usersAPI.reducerPath]: usersAPI.reducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

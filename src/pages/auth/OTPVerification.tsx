@@ -110,9 +110,9 @@ export const OTPVerification: React.FC = () => {
         type: 'EMAIL_VERIFICATION' 
       });
       
-      // Show success message before redirect
+      // Show success message before redirect - redirect to login with success message
       setTimeout(() => {
-        navigate(ROUTES.DASHBOARD);
+        navigate(ROUTES.LOGIN, { state: { verificationSuccess: true, email } });
       }, 1500);
     } catch (error: any) {
       setSuccess(false);

@@ -87,15 +87,27 @@ export const useAuth = () => {
   const register = useCallback(async (userData: RegisterData) => {
     try {
       const response = await registerMutation(userData).unwrap();
-      dispatch(setCredentials({
-        user: response.user,
-        token: response.accessToken,
-      }));
-      toast.success('Registration successful! Please verify your email.');
-      navigate(ROUTES.VERIFY_EMAIL);
+      
+      // Store the email for OTP verification
+      localStorage.setItem('pendingVerificationEmail', userData.email);
+      
+      toast.success(response.message || 'Registration successful! Please verify your email.');
+      navigate(ROUTES.VERIFY_EMAIL, { state: { email: userData.email } });
       return response;
     } catch (error: any) {
-      const message = error.data?.message || 'Registration failed';
+      // Handle validation errors from backend
+      let message = 'Registration failed';
+      
+      if (error.data?.message) {
+        if (Array.isArray(error.data.message)) {
+          // Handle array of validation errors
+          message = error.data.message.join(', ');
+        } else {
+          // Handle single error message
+          message = error.data.message;
+        }
+      }
+      
       dispatch(setError(message));
       toast.error(message);
       throw error;

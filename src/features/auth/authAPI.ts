@@ -144,6 +144,7 @@ export const {
   useResetPasswordMutation,
   useChangePasswordMutation,
   useGetCurrentUserQuery,
+  useLazyGetCurrentUserQuery,
   useRefreshTokenMutation,
   useVerifyEmailMutation,
   useVerifyPhoneMutation,

@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
+import { 
+  HomeIcon,
   UserGroupIcon,
-  CalendarIcon,
-  BellIcon,
-  ChartBarIcon,
-  PlusCircleIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon,
+  CalendarIcon,
+  ChartBarIcon,
+  DocumentDuplicateIcon,
+  BellIcon,
+  ArrowRightOnRectangleIcon,
+  PlusIcon,
+  PhoneIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren } from '@/features/children/childrenHooks';
@@ -15,312 +19,560 @@ import type { Child } from '@/features/children/childrenTypes';
 import { useParentDashboard } from '@/features/parents/parentsHooks';
 import { useNotifications } from '@/features/notifications/notificationsHooks';
 import { Button } from '@/components/common/Button';
-import { Card } from '@/components/common/Card';
-import { StatsCard } from '@/components/widgets/StatsCard';
-import { UpcomingVaccinations } from '@/components/widgets/UpcomingVaccinations';
-import { RecentActivities } from '@/components/widgets/RecentActivities';
-import { Spinner } from '@/components/common/Spinner';
-import { Badge } from '@/components/common/Badge';
 import { formatDate, formatAge } from '@/utils/dateHelpers';
 import { ROUTES } from '@/routing/routes';
+import { ChildRegistrationModal } from '@/features/children/components/ChildRegistrationModal';
+import { useChildrenMutations } from '@/features/children/hooks/useChildrenMutations';
+import { Toast } from '@/components/common/Toast';
 
 export const ParentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { children, isLoading: childrenLoading } = useChildren();
-  const { dashboard, isLoading: dashboardLoading } = useParentDashboard(user?.id || '');
+  const { children, isLoading: childrenLoading, refetch: refetchChildren } = useChildren();
+  const { dashboard, isLoading: dashboardLoading, refetch: refetchDashboard } = useParentDashboard(user?.id || '');
   const { unreadCount } = useNotifications(user?.id);
+  const { addChild } = useChildrenMutations();
 
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAddChildModal, setShowAddChildModal] = useState(false);
+  const [toast, setToast] = useState<{ show: boolean; type: 'success' | 'error'; message: string }>({
+    show: false,
+    type: 'success',
+    message: ''
+  });
 
-  // Set first child as selected by default
   useEffect(() => {
     if (children && children.length > 0 && !selectedChild) {
       setSelectedChild(children[0].id);
     }
   }, [children, selectedChild]);
 
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ show: true, type, message });
+    setTimeout(() => setToast({ show: false, type: 'success', message: '' }), 3000);
+  };
+
+  const handleAddChild = async (childData: any) => {
+    try {
+      setIsLoading(true);
+      await addChild(childData);
+      await refetchChildren();
+      await refetchDashboard();
+      showToast('success', 'Child registered successfully!');
+      setShowAddChildModal(false);
+    } catch (error) {
+      showToast('error', 'Failed to register child.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (childrenLoading || dashboardLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Spinner size="lg" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
-  // If no children, show onboarding
-  if (!children || children.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-br from-primary-50 via-accent-50 to-white rounded-2xl shadow-lg p-8">
-        <UserGroupIcon className="mx-auto h-16 w-16 text-accent-400 mb-4" />
-        <h3 className="text-2xl font-bold text-primary-800 mb-2">No children registered</h3>
-        <p className="text-base text-primary-600 mb-6 max-w-md text-center">
-          Get started by registering your first child for immunization tracking and reminders.
-        </p>
-        <Button
-          variant="primary"
-          onClick={() => navigate(ROUTES.ADD_CHILD)}
-          leftIcon={<PlusCircleIcon className="h-5 w-5" />}
-          className="px-6 py-3 rounded-full bg-accent-400 text-primary-900 font-bold shadow hover:bg-accent-300 transition"
-        >
-          Register Your First Child
-        </Button>
-      </div>
-    );
-  }
+  const selectedChildData = children?.find((c: Child) => c.id === selectedChild);
+  
+  // Use dashboard directly from hook (properly typed)
+  const completionRate = dashboard?.completionRate ?? 0;
+  const completedVaccinations = dashboard?.completedVaccinations ?? 0;
+  const missedVaccinations = dashboard?.missedVaccinations ?? 0;
+  const upcomingReminders = dashboard?.upcomingReminders ?? [];
+  const recentActivities = dashboard?.recentActivity ?? [];
 
-  const selectedChildData = children.find((c: Child) => c.id === selectedChild);
-  const upcomingVaccinations = dashboard?.upcomingReminders || [];
-  const recentActivities = dashboard?.recentActivity || [];
+  // Find the next appointment date from actual reminders
+  const nextAppointment = upcomingReminders.length > 0 
+    ? upcomingReminders.reduce((earliest, current) => 
+        new Date(current.scheduledFor) < new Date(earliest.scheduledFor) ? current : earliest
+      )
+    : null;
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto px-4 py-8">
-      {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-primary-50 via-white to-accent-50 rounded-2xl shadow p-6">
-        <div>
-          <h1 className="text-3xl font-extrabold text-primary-800 mb-1">
-            Welcome back, {user?.fullName?.split(' ')[0]}! <span className="text-accent-400">👋</span>
-          </h1>
-          <p className="text-base text-primary-600">
-            Here&apos;s an overview of your children&apos;s immunization status
-          </p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-gray-200 fixed h-full overflow-y-auto">
+        <div className="p-6">
+          <h1 className="text-xl font-bold text-blue-600">ImmuniTrack</h1>
+          <p className="text-sm text-gray-500">Kenya</p>
         </div>
-        <div className="flex items-center gap-3">
+
+        <nav className="px-4">
+          {/* Main Menu */}
+          <div className="mb-8">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Main Menu</p>
+            <ul className="space-y-1">
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.DASHBOARD)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-blue-50 text-blue-600"
+                >
+                  <HomeIcon className="h-5 w-5 text-blue-600" />
+                  <span>Dashboard</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.CHILDREN_LIST)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <UserGroupIcon className="h-5 w-5 text-gray-400" />
+                  <span>My Children</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.VACCINATIONS)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <CheckCircleIcon className="h-5 w-5 text-gray-400" />
+                  <span>Vaccinations</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.APPOINTMENTS)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <CalendarIcon className="h-5 w-5 text-gray-400" />
+                  <span>Appointments</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.GROWTH_TRACKING)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <ChartBarIcon className="h-5 w-5 text-gray-400" />
+                  <span>Growth Tracking</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.CERTIFICATES)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <DocumentDuplicateIcon className="h-5 w-5 text-gray-400" />
+                  <span>Certificates</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* More Section */}
+          <div className="mb-8">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">More</p>
+            <ul className="space-y-1">
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.NOTIFICATIONS)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 relative"
+                >
+                  <BellIcon className="h-5 w-5 text-gray-400" />
+                  <span className="text-sm">Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.REMINDERS)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5 text-gray-400" />
+                  <span className="text-sm">Reminders</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 ml-64 p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Welcome back, {user?.fullName?.split(' ')[0] || 'Parent'}!</h2>
+            <p className="text-gray-500">Here's your children's immunization overview</p>
+          </div>
           <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<BellIcon className="h-4 w-4" />}
-            onClick={() => navigate(ROUTES.NOTIFICATIONS)}
-            className="relative border-accent-400 text-accent-700 hover:bg-accent-50"
-          >
-            Notifications
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<PlusCircleIcon className="h-4 w-4" />}
-            onClick={() => navigate(ROUTES.ADD_CHILD)}
-            className="bg-accent-400 text-primary-900 font-bold hover:bg-accent-300 px-5"
+            onClick={() => setShowAddChildModal(true)}
+            leftIcon={<PlusIcon className="h-5 w-5" />}
+            className="bg-blue-600 text-white hover:bg-blue-700"
           >
             Add Child
           </Button>
         </div>
-      </div>
 
-      {/* Child Selector */}
-      <div className="flex space-x-3 overflow-x-auto pb-2">
-        {children.map((child: Child) => (
-          <button
-            key={child.id}
-            onClick={() => setSelectedChild(child.id)}
-            className={`
-              flex items-center space-x-3 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap
-              ${selectedChild === child.id
-                ? 'bg-primary-50 border-primary-500'
-                : 'border-gray-200 hover:bg-gray-50'
-              }
-            `}
-          >
-            <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-              <span className="text-primary-700 font-medium">
-                {child.firstName.charAt(0)}
-              </span>
+        {/* Stats Cards - Always visible with real data */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* Immunization Progress */}
+          <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="flex justify-between items-start mb-4">
+              <div className="bg-white/20 p-3 rounded-xl">
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-full">+0%</span>
             </div>
-            <div className="text-left">
-              <p className="font-medium text-gray-900">
-                {child.firstName} {child.lastName}
-              </p>
-              <p className="text-xs text-gray-500">
-                {formatAge(child.dateOfBirth)} • {child.gender}
-              </p>
-            </div>
-          </button>
-        ))}
-      </div>
+            <div className="text-3xl font-bold mb-1">{completionRate}%</div>
+            <div className="text-sm text-white/80">Immunization Progress</div>
+          </div>
 
-      {/* Stats Grid */}
-      {selectedChildData && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <StatsCard
-            title="Immunization Progress"
-            value={`${dashboard?.completionRate || 0}%`}
-            icon={<ChartBarIcon className="h-6 w-6" />}
-            color="primary"
-            trend={{
-              value: 5,
-              direction: 'up',
-              label: 'vs last month',
-            }}
-          />
-          <StatsCard
-            title="Completed"
-            value={dashboard?.completedVaccinations || 0}
-            icon={<CheckCircleIcon className="h-6 w-6" />}
-            color="success"
-          />
-          <StatsCard
-            title="Upcoming"
-            value={upcomingVaccinations.length}
-            icon={<CalendarIcon className="h-6 w-6" />}
-            color="warning"
-          />
-          <StatsCard
-            title="Missed"
-            value={dashboard?.missedVaccinations || 0}
-            icon={<ExclamationCircleIcon className="h-6 w-6" />}
-            color="danger"
-          />
+          {/* Completed Vaccines */}
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="mb-4">
+              <div className="bg-white/20 p-3 rounded-xl w-fit">
+                <CheckCircleIcon className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold mb-1">{completedVaccinations}</div>
+            <div className="text-sm text-white/80">Completed Vaccines</div>
+          </div>
+
+          {/* Upcoming Appointments */}
+          <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-6 text-white shadow-lg">
+            <div className="mb-4">
+              <div className="bg-white/20 p-3 rounded-xl w-fit">
+                <CalendarIcon className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold mb-1">{upcomingReminders.length}</div>
+            <div className="text-sm text-white/80 mb-1">Upcoming Appointments</div>
+            {nextAppointment && (
+              <div className="text-xs text-white/60">
+                Next: {new Date(nextAppointment.scheduledFor).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </div>
+            )}
+          </div>
+
+          {/* Missed Vaccinations */}
+          <div className="bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="mb-4">
+              <div className="bg-white/20 p-3 rounded-xl w-fit">
+                <BellIcon className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold mb-1">{missedVaccinations}</div>
+            <div className="text-sm text-white/80">Missed Vaccinations</div>
+          </div>
         </div>
-      )}
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Child Info */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Child Profile Card */}
-          {selectedChildData && (
-            <Card>
-              <Card.Body>
-                <div className="text-center">
-                  <div className="h-20 w-20 rounded-full bg-primary-100 flex items-center justify-center mx-auto">
-                    <span className="text-3xl text-primary-700 font-medium">
-                      {selectedChildData.firstName.charAt(0)}
-                      {selectedChildData.lastName.charAt(0)}
-                    </span>
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold text-gray-900">
-                    {selectedChildData.firstName} {selectedChildData.lastName}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Born: {formatDate(selectedChildData.dateOfBirth)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Age: {formatAge(selectedChildData.dateOfBirth)}
-                  </p>
-                  
-                  <div className="mt-4 flex justify-center space-x-2">
-                    <Badge variant="primary">{selectedChildData.gender}</Badge>
-                    {selectedChildData.birthCertificateNo && (
-                      <Badge variant="info">Birth Cert: {selectedChildData.birthCertificateNo}</Badge>
-                    )}
+        {/* Children Overview Cards */}
+        {children && children.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {children?.map((child) => {
+              // Get child-specific reminders count
+              const childUpcomingCount = upcomingReminders.filter((r) => r.childId === child.id).length;
+              
+              return (
+                <div
+                  key={child.id}
+                  onClick={() => setSelectedChild(child.id)}
+                  className={`bg-white rounded-xl border-2 p-6 cursor-pointer transition-all ${
+                    selectedChild === child.id 
+                      ? 'border-blue-500 shadow-lg' 
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                        {child.firstName?.charAt(0)}{child.lastName?.charAt(0) || ''}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{child.firstName} {child.lastName}</h3>
+                        <p className="text-sm text-gray-500">
+                          Born {formatDate(child.dateOfBirth)} • {formatAge(child.dateOfBirth)} • {child.gender}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-500">Progress</div>
+                      <div className="font-bold text-blue-600">{completionRate}%</div>
+                    </div>
                   </div>
 
-                  <div className="mt-6 flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      fullWidth
-                      onClick={() => navigate(ROUTES.CHILD_PROFILE.replace(':id', selectedChildData.id))}
-                    >
-                      View Profile
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      fullWidth
-                      onClick={() => navigate(ROUTES.CHILD_HISTORY.replace(':id', selectedChildData.id))}
-                    >
-                      History
-                    </Button>
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                    <div>
+                      <div className="text-gray-500">Completed</div>
+                      <div className="font-semibold text-gray-900">{completedVaccinations}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Upcoming</div>
+                      <div className="font-semibold text-gray-900">{childUpcomingCount}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Missed</div>
+                      <div className="font-semibold text-gray-900">{missedVaccinations}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Growth</div>
+                      <div className="font-semibold text-gray-900">+0%</div>
+                    </div>
                   </div>
                 </div>
-              </Card.Body>
-            </Card>
-          )}
+              );
+            })}
+          </div>
+        )}
 
-          {/* Quick Actions */}
-          <Card>
-            <Card.Header title="Quick Actions" />
-            <Card.Body>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<CalendarIcon className="h-4 w-4" />}
-                  onClick={() => navigate(ROUTES.APPOINTMENTS)}
-                >
-                  View Appointments
-                </Button>
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<BellIcon className="h-4 w-4" />}
-                  onClick={() => navigate(ROUTES.REMINDER_SETTINGS)}
-                >
-                  Reminder Settings
-                </Button>
-                <Button
-                  variant="outline"
-                  fullWidth
-                  leftIcon={<ChartBarIcon className="h-4 w-4" />}
-                  onClick={() => selectedChild && navigate(ROUTES.GROWTH_CHART.replace(':id', selectedChild))}
-                  disabled={!selectedChild}
-                >
-                  Growth Chart
-                </Button>
+        {/* Selected Child Details */}
+        {selectedChildData && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">
+                  {selectedChildData.firstName} {selectedChildData.lastName}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Born {formatDate(selectedChildData.dateOfBirth)} • {formatAge(selectedChildData.dateOfBirth)} • {selectedChildData.gender}
+                </p>
               </div>
-            </Card.Body>
-          </Card>
-        </div>
-
-        {/* Right Column - Two columns on large screens */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Upcoming Vaccinations */}
-          <UpcomingVaccinations
-            vaccinations={upcomingVaccinations.map(r => ({
-              id: r.id,
-              childName: r.childName || 'Unknown',
-              vaccineName: r.vaccineName || 'Vaccine',
-              dueDate: r.scheduledFor,
-              status: new Date(r.scheduledFor) > new Date() ? 'upcoming' : 'due',
-            }))}
-          />
-
-          {/* Recent Activities */}
-          <RecentActivities
-            activities={recentActivities.map(a => ({
-              id: a.id,
-              type: a.type,
-              title: a.description,
-              description: a.description,
-              timestamp: a.timestamp,
-              child: a.childName,
-            }))}
-          />
-        </div>
-      </div>
-
-      {/* Health Tips */}
-      <Card>
-        <Card.Header title="Health Tips" />
-        <Card.Body>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-1">Stay on Schedule</h4>
-              <p className="text-sm text-blue-600">
-                Keep track of your child's vaccination dates and set reminders.
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Immunization Progress</span>
+                <span className="text-2xl font-bold text-blue-600">{completionRate}%</span>
+              </div>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <h4 className="font-medium text-green-800 mb-1">Nutrition Matters</h4>
-              <p className="text-sm text-green-600">
-                Proper nutrition helps boost immunity and vaccine effectiveness.
-              </p>
-            </div>
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <h4 className="font-medium text-purple-800 mb-1">Monitor Growth</h4>
-              <p className="text-sm text-purple-600">
-                Regular growth tracking helps detect issues early.
-              </p>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-4 gap-3">
+              <button 
+                onClick={() => navigate(`/child-profile/${selectedChildData.id}`)}
+                className="py-2 px-4 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Profile
+              </button>
+              <button 
+                onClick={() => navigate(`/vaccination-history/${selectedChildData.id}`)}
+                className="py-2 px-4 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+              >
+                History
+              </button>
+              <button 
+                onClick={() => navigate(`/certificates/${selectedChildData.id}`)}
+                className="py-2 px-4 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Certificate
+              </button>
+              <button 
+                onClick={() => navigate(`/schedule/${selectedChildData.id}`)}
+                className="py-2 px-4 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Schedule
+              </button>
             </div>
           </div>
-        </Card.Body>
-      </Card>
+        )}
+
+        {/* Quick Actions & Emergency Contacts */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+          {/* Quick Actions */}
+          <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="font-semibold text-gray-900 mb-1">Quick Actions</h3>
+            <p className="text-sm text-gray-500 mb-4">Manage your child's health</p>
+            
+            <div className="grid grid-cols-4 gap-4">
+              <button className="text-center group" onClick={() => navigate('/appointments/new')}>
+                <div className="h-12 w-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <CalendarIcon className="h-6 w-6" />
+                </div>
+                <span className="text-xs text-gray-600">Schedule</span>
+              </button>
+              <button className="text-center group" onClick={() => navigate('/growth-tracking/new')}>
+                <div className="h-12 w-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <ChartBarIcon className="h-6 w-6" />
+                </div>
+                <span className="text-xs text-gray-600">Growth</span>
+              </button>
+              <button className="text-center group" onClick={() => navigate('/certificates')}>
+                <div className="h-12 w-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <DocumentDuplicateIcon className="h-6 w-6" />
+                </div>
+                <span className="text-xs text-gray-600">Certificates</span>
+              </button>
+              <button className="text-center group" onClick={() => navigate('/reminders')}>
+                <div className="h-12 w-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <BellIcon className="h-6 w-6" />
+                </div>
+                <span className="text-xs text-gray-600">Reminders</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Emergency Contacts */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="font-semibold text-gray-900 mb-3">Emergency Contacts</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
+                <PhoneIcon className="h-5 w-5 text-red-600" />
+                <div>
+                  <p className="text-xs text-red-600">Hotline</p>
+                  <p className="text-sm font-semibold">1199</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <MapPinIcon className="h-5 w-5 text-gray-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Health Facility</p>
+                  <p className="text-sm font-medium">Nearest Center</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Vaccinations & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Upcoming Vaccinations */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">Upcoming Vaccinations</h3>
+                <p className="text-sm text-gray-500">Next appointments</p>
+              </div>
+              <button 
+                onClick={() => navigate('/appointments')}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                View All
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {upcomingReminders.length > 0 ? (
+                upcomingReminders.slice(0, 4).map((reminder) => (
+                  <div key={reminder.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{reminder.vaccineName}</p>
+                      <p className="text-xs text-gray-500">
+                        {formatDate(reminder.scheduledFor)} • {reminder.childName}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => {/* Handle mark as done */}}
+                      className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600"
+                    >
+                      Done
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 py-4">No upcoming vaccinations</p>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Due Today</span>
+                <div className="flex gap-3">
+                  <span className="text-gray-400">□ Done</span>
+                  <span className="text-gray-400">✓ Due</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">Recent Activity</h3>
+                <p className="text-sm text-gray-500">Latest updates</p>
+              </div>
+              <button 
+                onClick={() => navigate('/activity')}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                View All
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {recentActivities.length > 0 ? (
+                recentActivities.slice(0, 4).map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      activity.type === 'vaccination' ? 'bg-green-100' :
+                      activity.type === 'appointment' ? 'bg-blue-100' : 'bg-orange-100'
+                    }`}>
+                      {activity.type === 'vaccination' && <CheckCircleIcon className="h-4 w-4 text-green-600" />}
+                      {activity.type === 'appointment' && <CalendarIcon className="h-4 w-4 text-blue-600" />}
+                      {activity.type === 'reminder' && <BellIcon className="h-4 w-4 text-orange-600" />}
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-900">{activity.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(activity.timestamp)} • {activity.childName}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 py-4">No recent activity</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Health Tips */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="font-semibold text-gray-900">Health Tips</h3>
+              <p className="text-sm text-gray-500">Expert advice for your family</p>
+            </div>
+            <button 
+              onClick={() => navigate('/health-tips')}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              More Tips
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-1">Stay on Schedule</h4>
+              <p className="text-sm text-gray-600">Keep track of vaccination dates for optimal protection</p>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-1">Nutrition Matters</h4>
+              <p className="text-sm text-gray-600">Proper nutrition boosts vaccine effectiveness</p>
+            </div>
+            <div className="p-4 bg-purple-50 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-1">Monitor Growth</h4>
+              <p className="text-sm text-gray-600">Regular tracking helps detect issues early</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Modals */}
+      <ChildRegistrationModal
+        isOpen={showAddChildModal}
+        onClose={() => setShowAddChildModal(false)}
+        onSuccess={handleAddChild}
+        isLoading={isLoading}
+      />
+
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 };

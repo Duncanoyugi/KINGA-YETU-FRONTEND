@@ -141,7 +141,7 @@ export const PredictiveAnalytics: React.FC = () => {
               <Card>
                 <Card.Body className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {predictions.trend > 0 ? '+' : ''}{predictions.trend.toFixed(1)}%
+                    {predictions.trend > 0 ? '+' : ''}{(predictions.trend ?? 0).toFixed(1)}%
                   </div>
                   <div className="text-sm text-gray-600">Projected Change</div>
                 </Card.Body>

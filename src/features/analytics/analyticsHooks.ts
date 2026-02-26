@@ -82,32 +82,39 @@ export const useAnalyticsDashboard = (params: AnalyticsRequest) => {
   const kpis = useMemo(() => {
     if (!dashboard) return null;
     
+    // Add default values to prevent undefined errors
+    const coverageRate = dashboard.coverageRate ?? 0;
+    const dropoutRate = dashboard.dropoutRate ?? 0;
+    const timelinessRate = dashboard.timelinessRate ?? 0;
+    const totalChildren = dashboard.totalChildren ?? 0;
+    const activeChildren = dashboard.activeChildren ?? 0;
+    
     return {
       coverage: {
-        value: dashboard.coverageRate,
+        value: coverageRate,
         target: 90,
-        status: dashboard.coverageRate >= 90 ? 'excellent' : 
-                dashboard.coverageRate >= 75 ? 'good' : 
-                dashboard.coverageRate >= 50 ? 'fair' : 'poor',
+        status: coverageRate >= 90 ? 'excellent' : 
+                coverageRate >= 75 ? 'good' : 
+                coverageRate >= 50 ? 'fair' : 'poor',
       },
       dropout: {
-        value: dashboard.dropoutRate,
+        value: dropoutRate,
         target: 10,
-        status: dashboard.dropoutRate <= 10 ? 'excellent' :
-                dashboard.dropoutRate <= 20 ? 'good' :
-                dashboard.dropoutRate <= 30 ? 'fair' : 'poor',
+        status: dropoutRate <= 10 ? 'excellent' :
+                dropoutRate <= 20 ? 'good' :
+                dropoutRate <= 30 ? 'fair' : 'poor',
       },
       timeliness: {
-        value: dashboard.timelinessRate,
+        value: timelinessRate,
         target: 85,
-        status: dashboard.timelinessRate >= 85 ? 'excellent' :
-                dashboard.timelinessRate >= 70 ? 'good' :
-                dashboard.timelinessRate >= 50 ? 'fair' : 'poor',
+        status: timelinessRate >= 85 ? 'excellent' :
+                timelinessRate >= 70 ? 'good' :
+                timelinessRate >= 50 ? 'fair' : 'poor',
       },
       children: {
-        total: dashboard.totalChildren,
-        active: dashboard.activeChildren,
-        ratio: (dashboard.activeChildren / dashboard.totalChildren) * 100,
+        total: totalChildren,
+        active: activeChildren,
+        ratio: totalChildren > 0 ? (activeChildren / totalChildren) * 100 : 0,
       },
     };
   }, [dashboard]);

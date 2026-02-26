@@ -1,5 +1,8 @@
 import type { User, HealthFacility, Gender } from '../auth/authTypes';
 
+// Re-export Gender for convenience
+export type { Gender };
+
 // Enum types matching Prisma schema
 export type ImmunizationStatus = 'SCHEDULED' | 'PENDING' | 'ADMINISTERED' | 'MISSED' | 'CONTRAINDICATED';
 

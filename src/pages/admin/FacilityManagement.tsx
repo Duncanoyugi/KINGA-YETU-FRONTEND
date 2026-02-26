@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BuildingOfficeIcon,
@@ -11,101 +11,20 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
+import { useDebounce } from '@/hooks/useDebounce';
+import {
+  useGetFacilitiesQuery,
+  useGetFacilityStatsQuery,
+  useDeleteFacilityMutation,
+} from '@/features/facilities/facilitiesHooks';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
 import { Modal } from '@/components/common/Modal';
-import { Tabs } from '@/components/common/Tabs';
+import { Spinner } from '@/components/common/Spinner';
 import { ROUTES } from '@/routing/routes';
-
-interface Facility {
-  id: string;
-  name: string;
-  type: string;
-  code: string;
-  mflCode: string;
-  county: string;
-  subCounty: string;
-  ward: string;
-  address: string;
-  phone: string;
-  email: string;
-  owner: string;
-  level: string;
-  status: 'OPERATIONAL' | 'NON_OPERATIONAL' | 'UNDER_CONSTRUCTION';
-  bedCapacity?: number;
-  staffCount: number;
-  services: string[];
-  isActive: boolean;
-  createdAt: string;
-}
-
-const mockFacilities: Facility[] = [
-  {
-    id: 'fac1',
-    name: 'Nairobi Hospital',
-    type: 'HOSPITAL',
-    code: 'NH001',
-    mflCode: '12345',
-    county: 'Nairobi',
-    subCounty: 'Westlands',
-    ward: 'Westlands',
-    address: '123 Hospital Rd',
-    phone: '+254207123456',
-    email: 'info@nairobihospital.ke',
-    owner: 'PRIVATE',
-    level: 'LEVEL_4',
-    status: 'OPERATIONAL',
-    bedCapacity: 500,
-    staffCount: 120,
-    services: ['IMMUNIZATION', 'MATERNAL', 'EMERGENCY'],
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'fac2',
-    name: 'Kenyatta National Hospital',
-    type: 'HOSPITAL',
-    code: 'KNH001',
-    mflCode: '12346',
-    county: 'Nairobi',
-    subCounty: 'Kamukunji',
-    ward: 'Ngara',
-    address: '456 Hospital Ave',
-    phone: '+254202723456',
-    email: 'info@knh.ke',
-    owner: 'GOVERNMENT',
-    level: 'LEVEL_6',
-    status: 'OPERATIONAL',
-    bedCapacity: 1800,
-    staffCount: 450,
-    services: ['IMMUNIZATION', 'MATERNAL', 'EMERGENCY', 'HIV', 'TB'],
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'fac3',
-    name: 'Mombasa Hospital',
-    type: 'HOSPITAL',
-    code: 'MH001',
-    mflCode: '12347',
-    county: 'Mombasa',
-    subCounty: 'Mvita',
-    ward: 'Mvita',
-    address: '789 Coast Rd',
-    phone: '+254417123456',
-    email: 'info@mombasahospital.ke',
-    owner: 'PRIVATE',
-    level: 'LEVEL_4',
-    status: 'OPERATIONAL',
-    bedCapacity: 300,
-    staffCount: 85,
-    services: ['IMMUNIZATION', 'MATERNAL', 'EMERGENCY'],
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-];
+import type { Facility, FacilityType } from '@/features/facilities/facilitiesTypes';
 
 const facilityTypes = [
   { value: 'HOSPITAL', label: 'Hospital' },
@@ -120,12 +39,11 @@ const counties = [
   'Kiambu', 'Machakos', 'Meru', 'Kakamega', 'Kilifi',
 ];
 
-export const FacilityManagement: React.FC = () => {
+const FacilityManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { isAdmin, isSuperAdmin } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   
-  const [facilities, setFacilities] = useState<Facility[]>(mockFacilities);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCounty, setSelectedCounty] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -133,28 +51,40 @@ export const FacilityManagement: React.FC = () => {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [activeTab, setActiveTab] = useState('list');
 
-  const tabs = [
-    { id: 'list', label: 'Facilities List' },
-    { id: 'map', label: 'Map View' },
-    { id: 'stats', label: 'Statistics' },
-  ];
+  const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const filteredFacilities = facilities.filter(facility => {
-    const matchesSearch = facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         facility.mflCode.includes(searchTerm) ||
-                         facility.code.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCounty = selectedCounty === 'all' || facility.county === selectedCounty;
-    const matchesType = selectedType === 'all' || facility.type === selectedType;
-    
-    return matchesSearch && matchesCounty && matchesType;
-  });
+  const filterParams = useMemo(() => ({
+    search: debouncedSearch || undefined,
+    county: selectedCounty !== 'all' ? selectedCounty : undefined,
+    type: (selectedType !== 'all' ? selectedType : undefined) as FacilityType | undefined,
+  }), [debouncedSearch, selectedCounty, selectedType]);
+
+  const { data: facilitiesData, isLoading } = useGetFacilitiesQuery(filterParams);
+  const { data: statsData } = useGetFacilityStatsQuery();
+  const [deleteFacility, { isLoading: isDeleting }] = useDeleteFacilityMutation();
+
+  const facilities = facilitiesData || [];
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+
+  const filteredFacilities = useMemo(() => {
+    return facilities.filter(facility => {
+      const matchesSearch = !searchTerm || 
+        facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (facility.mflCode && facility.mflCode.includes(searchTerm)) ||
+        (facility.code && facility.code.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesCounty = selectedCounty === 'all' || facility.county === selectedCounty;
+      const matchesType = selectedType === 'all' || facility.type === selectedType;
+      
+      return matchesSearch && matchesCounty && matchesType;
+    });
+  }, [facilities, searchTerm, selectedCounty, selectedType]);
 
   const handleDeleteFacility = async () => {
     if (!selectedFacility) return;
 
     try {
-      setFacilities(facilities.filter(f => f.id !== selectedFacility.id));
+      await deleteFacility(selectedFacility.id).unwrap();
       showToast({
         type: 'success',
         message: 'Facility deleted successfully',
@@ -182,6 +112,20 @@ export const FacilityManagement: React.FC = () => {
     }
   };
 
+  const tabs = [
+    { id: 'list', label: 'Facilities List' },
+    { id: 'map', label: 'Map View' },
+    { id: 'stats', label: 'Statistics' },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -192,7 +136,7 @@ export const FacilityManagement: React.FC = () => {
             Manage health facilities and their details
           </p>
         </div>
-        {(isAdmin || isSuperAdmin) && (
+        {isAdmin && (
           <div className="mt-4 sm:mt-0">
             <Button
               variant="primary"
@@ -209,14 +153,14 @@ export const FacilityManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <Card.Body className="text-center">
-            <div className="text-2xl font-bold text-primary-600">{facilities.length}</div>
+            <div className="text-2xl font-bold text-primary-600">{statsData?.total || facilities.length}</div>
             <div className="text-sm text-gray-600">Total Facilities</div>
           </Card.Body>
         </Card>
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {facilities.filter(f => f.status === 'OPERATIONAL').length}
+              {statsData?.active || facilities.filter(f => f.status === 'OPERATIONAL').length}
             </div>
             <div className="text-sm text-gray-600">Operational</div>
           </Card.Body>
@@ -224,7 +168,7 @@ export const FacilityManagement: React.FC = () => {
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {facilities.reduce((sum, f) => sum + f.staffCount, 0)}
+              {facilities.reduce((sum, f) => sum + (f.staffCount || 0), 0)}
             </div>
             <div className="text-sm text-gray-600">Total Staff</div>
           </Card.Body>
@@ -240,7 +184,21 @@ export const FacilityManagement: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex space-x-4 border-b border-gray-200">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`pb-2 px-1 text-sm font-medium ${
+              activeTab === tab.id
+                ? 'text-primary-600 border-b-2 border-primary-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* List View */}
       {activeTab === 'list' && (
@@ -322,12 +280,12 @@ export const FacilityManagement: React.FC = () => {
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {facility.services.slice(0, 3).map(service => (
+                    {facility.services?.slice(0, 3).map(service => (
                       <Badge key={service} variant="default" size="sm">
                         {service}
                       </Badge>
                     ))}
-                    {facility.services.length > 3 && (
+                    {facility.services?.length > 3 && (
                       <Badge variant="default" size="sm">
                         +{facility.services.length - 3}
                       </Badge>
@@ -352,7 +310,7 @@ export const FacilityManagement: React.FC = () => {
                   </div>
 
                   {/* Admin Actions */}
-                  {(isAdmin || isSuperAdmin) && (
+                  {isAdmin && (
                     <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end space-x-2">
                       <Button
                         variant="ghost"
@@ -410,7 +368,7 @@ export const FacilityManagement: React.FC = () => {
               <div className="space-y-3">
                 {counties.slice(0, 5).map(county => {
                   const count = facilities.filter(f => f.county === county).length;
-                  const percentage = (count / facilities.length) * 100;
+                  const percentage = facilities.length > 0 ? (count / facilities.length) * 100 : 0;
                   
                   return (
                     <div key={county}>
@@ -437,7 +395,7 @@ export const FacilityManagement: React.FC = () => {
               <div className="space-y-3">
                 {facilityTypes.map(type => {
                   const count = facilities.filter(f => f.type === type.value).length;
-                  const percentage = (count / facilities.length) * 100;
+                  const percentage = facilities.length > 0 ? (count / facilities.length) * 100 : 0;
                   
                   return (
                     <div key={type.value}>
@@ -470,12 +428,10 @@ export const FacilityManagement: React.FC = () => {
         title="Delete Facility"
         size="sm"
       >
-        <Modal.Body>
+        <div className="space-y-4">
           <p className="text-gray-600">
             Are you sure you want to delete {selectedFacility?.name}? This action cannot be undone.
           </p>
-        </Modal.Body>
-        <Modal.Footer>
           <div className="flex justify-end space-x-3">
             <Button
               variant="outline"
@@ -489,11 +445,12 @@ export const FacilityManagement: React.FC = () => {
             <Button
               variant="danger"
               onClick={handleDeleteFacility}
+              loading={isDeleting}
             >
               Delete Facility
             </Button>
           </div>
-        </Modal.Footer>
+        </div>
       </Modal>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   UserPlusIcon,
@@ -14,6 +14,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/useToast';
 import { useDebounce } from '@/hooks/useDebounce';
+import {
+  useGetUsersQuery,
+  useGetUserStatsQuery,
+  useDeleteUserMutation,
+  useActivateUserMutation,
+  useDeactivateUserMutation,
+  useUpdateUserRoleMutation,
+  useVerifyUserMutation,
+} from '@/features/users/usersHooks';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
@@ -24,61 +33,7 @@ import { Modal } from '@/components/common/Modal';
 import { Pagination } from '@/components/common/Pagination';
 import { formatDate } from '@/utils/dateHelpers';
 import { ROUTES } from '@/routing/routes';
-
-interface User {
-  id: string;
-  fullName: string;
-  email: string;
-  phoneNumber?: string;
-  role: string;
-  isActive: boolean;
-  isEmailVerified: boolean;
-  isPhoneVerified: boolean;
-  lastLoginAt?: string;
-  createdAt: string;
-  facilityId?: string;
-  facilityName?: string;
-}
-
-const mockUsers: User[] = [
-  {
-    id: '1',
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    phoneNumber: '+254712345678',
-    role: 'PARENT',
-    isActive: true,
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    lastLoginAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    fullName: 'Dr. Jane Smith',
-    email: 'jane.smith@hospital.ke',
-    phoneNumber: '+254723456789',
-    role: 'HEALTH_WORKER',
-    isActive: true,
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    facilityId: 'fac1',
-    facilityName: 'Nairobi Hospital',
-    lastLoginAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    fullName: 'Admin User',
-    email: 'admin@immunitrack.ke',
-    role: 'ADMIN',
-    isActive: true,
-    isEmailVerified: true,
-    isPhoneVerified: true,
-    lastLoginAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-];
+import type { User } from '@/features/users/usersAPI';
 
 const roles = [
   { value: 'PARENT', label: 'Parent' },
@@ -89,15 +44,12 @@ const roles = [
   { value: 'SUPER_ADMIN', label: 'Super Administrator' },
 ];
 
-export const UserManagement: React.FC = () => {
+const UserManagement: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const { can } = usePermissions();
   const { showToast } = useToast();
-  
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(mockUsers);
-  const [isLoading, setIsLoading] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -110,45 +62,34 @@ export const UserManagement: React.FC = () => {
   const debouncedSearch = useDebounce(searchTerm, 500);
   const pageSize = 10;
 
-  useEffect(() => {
-    filterUsers();
-  }, [debouncedSearch, selectedRole, selectedStatus, users]);
+  const filterParams = useMemo(() => ({
+    search: debouncedSearch || undefined,
+    role: selectedRole !== 'all' ? selectedRole : undefined,
+    isActive: selectedStatus === 'all' ? undefined : selectedStatus === 'active',
+    page: currentPage,
+    limit: pageSize,
+  }), [debouncedSearch, selectedRole, selectedStatus, currentPage]);
 
-  const filterUsers = () => {
-    let filtered = [...users];
+  const { data: usersData, isLoading: isLoadingUsers } = useGetUsersQuery(filterParams);
+  const { data: statsData } = useGetUserStatsQuery();
 
-    // Apply search filter
-    if (debouncedSearch) {
-      filtered = filtered.filter(user =>
-        user.fullName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        user.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        user.phoneNumber?.includes(debouncedSearch)
-      );
-    }
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+  const [activateUser, { isLoading: isActivating }] = useActivateUserMutation();
+  const [deactivateUser, { isLoading: isDeactivating }] = useDeactivateUserMutation();
+  const [updateUserRole, { isLoading: isUpdatingRole }] = useUpdateUserRoleMutation();
+  const [verifyUser, { isLoading: isVerifying }] = useVerifyUserMutation();
 
-    // Apply role filter
-    if (selectedRole !== 'all') {
-      filtered = filtered.filter(user => user.role === selectedRole);
-    }
+  const users = usersData?.data || [];
+  const totalUsers = usersData?.pagination?.total || 0;
+  const totalPages = Math.ceil(totalUsers / pageSize);
 
-    // Apply status filter
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(user =>
-        selectedStatus === 'active' ? user.isActive : !user.isActive
-      );
-    }
-
-    setFilteredUsers(filtered);
-    setCurrentPage(1);
-  };
+  const isLoading = isLoadingUsers || isDeleting || isActivating || isDeactivating || isUpdatingRole || isVerifying;
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
 
     try {
-      setIsLoading(true);
-      // API call would go here
-      setUsers(users.filter(u => u.id !== selectedUser.id));
+      await deleteUser(selectedUser.id).unwrap();
       showToast({
         type: 'success',
         message: 'User deleted successfully',
@@ -160,8 +101,6 @@ export const UserManagement: React.FC = () => {
         type: 'error',
         message: 'Failed to delete user',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -169,11 +108,7 @@ export const UserManagement: React.FC = () => {
     if (!selectedUser || !newRole) return;
 
     try {
-      setIsLoading(true);
-      // API call would go here
-      setUsers(users.map(u =>
-        u.id === selectedUser.id ? { ...u, role: newRole } : u
-      ));
+      await updateUserRole({ id: selectedUser.id, role: newRole }).unwrap();
       showToast({
         type: 'success',
         message: 'User role updated successfully',
@@ -186,18 +121,16 @@ export const UserManagement: React.FC = () => {
         type: 'error',
         message: 'Failed to update user role',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleToggleStatus = async (user: User) => {
     try {
-      setIsLoading(true);
-      // API call would go here
-      setUsers(users.map(u =>
-        u.id === user.id ? { ...u, isActive: !u.isActive } : u
-      ));
+      if (user.isActive) {
+        await deactivateUser(user.id).unwrap();
+      } else {
+        await activateUser(user.id).unwrap();
+      }
       showToast({
         type: 'success',
         message: `User ${user.isActive ? 'deactivated' : 'activated'} successfully`,
@@ -207,29 +140,21 @@ export const UserManagement: React.FC = () => {
         type: 'error',
         message: 'Failed to update user status',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleResendVerification = async (user: User, type: 'email' | 'phone') => {
     try {
-      setIsLoading(true);
-      // API call would use user.id, user.email, or user.phoneNumber based on type
-      console.log(`Resending ${type} verification to user:`, user.id);
-      // Simulated API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await verifyUser({ id: user.id, type }).unwrap();
       showToast({
         type: 'success',
-        message: `Verification ${type} resent successfully to ${type === 'email' ? user.email : user.phoneNumber}`,
+        message: `Verification ${type} sent successfully`,
       });
     } catch (error) {
       showToast({
         type: 'error',
         message: `Failed to resend verification ${type}`,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -384,14 +309,8 @@ export const UserManagement: React.FC = () => {
     },
   ];
 
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
@@ -412,18 +331,17 @@ export const UserManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <Card.Body className="text-center">
-            <div className="text-2xl font-bold text-primary-600">{users.length}</div>
+            <div className="text-2xl font-bold text-primary-600">{statsData?.total || totalUsers}</div>
             <div className="text-sm text-gray-600">Total Users</div>
           </Card.Body>
         </Card>
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {users.filter(u => u.isActive).length}
+              {statsData?.active || users.filter(u => u.isActive).length}
             </div>
             <div className="text-sm text-gray-600">Active Users</div>
           </Card.Body>
@@ -431,7 +349,7 @@ export const UserManagement: React.FC = () => {
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-yellow-600">
-              {users.filter(u => !u.isEmailVerified).length}
+              {statsData?.unverifiedEmails || users.filter(u => !u.isEmailVerified).length}
             </div>
             <div className="text-sm text-gray-600">Unverified Emails</div>
           </Card.Body>
@@ -439,14 +357,13 @@ export const UserManagement: React.FC = () => {
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {users.filter(u => u.role === 'HEALTH_WORKER').length}
+              {statsData?.healthWorkers || users.filter(u => u.role === 'HEALTH_WORKER').length}
             </div>
             <div className="text-sm text-gray-600">Health Workers</div>
           </Card.Body>
         </Card>
       </div>
 
-      {/* Filters */}
       <Card>
         <Card.Body>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -487,7 +404,6 @@ export const UserManagement: React.FC = () => {
         </Card.Body>
       </Card>
 
-      {/* Users Table */}
       <Card>
         <Card.Body>
           {isLoading ? (
@@ -497,17 +413,17 @@ export const UserManagement: React.FC = () => {
           ) : (
             <>
               <Table
-                data={paginatedUsers}
+                data={users}
                 columns={columns}
                 onRowClick={(row) => navigate(ROUTES.USER_DETAILS.replace(':id', row.id))}
                 emptyMessage="No users found"
               />
 
-              {filteredUsers.length > pageSize && (
+              {totalPages > 1 && (
                 <div className="mt-4">
                   <Pagination
                     currentPage={currentPage}
-                    totalPages={Math.ceil(filteredUsers.length / pageSize)}
+                    totalPages={totalPages}
                     onPageChange={setCurrentPage}
                   />
                 </div>
@@ -517,7 +433,6 @@ export const UserManagement: React.FC = () => {
         </Card.Body>
       </Card>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => {
@@ -527,12 +442,10 @@ export const UserManagement: React.FC = () => {
         title="Delete User"
         size="sm"
       >
-        <Modal.Body>
+        <div className="space-y-4">
           <p className="text-gray-600">
             Are you sure you want to delete {selectedUser?.fullName}? This action cannot be undone.
           </p>
-        </Modal.Body>
-        <Modal.Footer>
           <div className="flex justify-end space-x-3">
             <Button
               variant="outline"
@@ -550,10 +463,9 @@ export const UserManagement: React.FC = () => {
               Delete User
             </Button>
           </div>
-        </Modal.Footer>
+        </div>
       </Modal>
 
-      {/* Change Role Modal */}
       <Modal
         isOpen={showRoleModal}
         onClose={() => {
@@ -564,30 +476,26 @@ export const UserManagement: React.FC = () => {
         title="Change User Role"
         size="sm"
       >
-        <Modal.Body>
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              Change role for <span className="font-medium">{selectedUser?.fullName}</span>
-            </p>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                New Role
-              </label>
-              <select
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              >
-                {roles.map(role => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Change role for <span className="font-medium">{selectedUser?.fullName}</span>
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              New Role
+            </label>
+            <select
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value)}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            >
+              {roles.map(role => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
+              ))}
+            </select>
           </div>
-        </Modal.Body>
-        <Modal.Footer>
           <div className="flex justify-end space-x-3">
             <Button
               variant="outline"
@@ -607,7 +515,7 @@ export const UserManagement: React.FC = () => {
               Update Role
             </Button>
           </div>
-        </Modal.Footer>
+        </div>
       </Modal>
     </div>
   );

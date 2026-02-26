@@ -1,10 +1,21 @@
 // RTK Query API for schedules
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { Schedule, CreateScheduleRequest, UpdateScheduleRequest, ScheduleFilter, UpcomingSchedule } from './schedulesTypes';
+import { API_URL } from '@/config/environment';
 
 export const schedulesAPI = createApi({
   reducerPath: 'schedulesAPI',
-  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: `${API_URL}/schedules`,
+    prepareHeaders: (headers) => {
+      // Get the token from localStorage or session
+      const token = localStorage.getItem('immunitrack_token') || sessionStorage.getItem('immunitrack_token');
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   tagTypes: ['Schedules'],
   endpoints: (builder) => ({
     // Get all schedules with optional filters

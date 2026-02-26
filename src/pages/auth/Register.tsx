@@ -63,7 +63,17 @@ export const Register: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      await registerUser(data);
+      // Transform form data to match backend DTO
+      const registrationData = {
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber || undefined,
+        role: role,
+        acceptTerms: data.termsAccepted, // Map termsAccepted to acceptTerms
+      };
+
+      await registerUser(registrationData);
       navigate(ROUTES.VERIFY_EMAIL, { state: { email: data.email } });
     } catch (error) {
       // Error is handled by the hook

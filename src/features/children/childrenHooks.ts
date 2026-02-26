@@ -176,6 +176,8 @@ export const useChildren = () => {
     getChildById,
     refetchChildren,
     refetchChild,
+    // Alias for backwards compatibility
+    refetch: refetchChildren,
     // Pagination setter wrapper
     setPagination: (p: Partial<typeof pagination>) => dispatch(setPagination(p)),
     clearError: clearChildError,
