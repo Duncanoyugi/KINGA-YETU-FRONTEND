@@ -161,7 +161,7 @@ export const useAuth = () => {
   const refreshToken = useCallback(async () => {
     try {
       const response = await refreshTokenMutation().unwrap();
-      return response.token;
+      return response.accessToken;
     } catch (error) {
       await handleLogout();
       throw error;
@@ -221,8 +221,6 @@ export const useAuth = () => {
       case 'ADMIN':
       case 'SUPER_ADMIN':
         return ROUTES.ADMIN_DASHBOARD;
-      case 'COUNTY_ADMIN':
-        return ROUTES.COUNTY_ADMIN_DASHBOARD;
       default:
         return ROUTES.DASHBOARD;
     }
@@ -237,10 +235,10 @@ export const useAuth = () => {
   const isEmailVerified = useMemo(() => user?.isEmailVerified || false, [user]);
   const isPhoneVerified = useMemo(() => user?.isPhoneVerified || false, [user]);
 
-  // Backwards-compatible aliases
-  const resetPassword = useCallback(async (data: any) => {
+  // Backwards-compatible alias used by ResetPassword page
+  const resetPassword = useCallback(async (data: { otpCode: string; newPassword: string; confirmNewPassword: string }) => {
     const result = await dispatch(authAPI.endpoints.resetPassword.initiate(data));
-    return (result as any);
+    return result as any;
   }, [dispatch]);
 
   const clearAuthError = useCallback(() => {

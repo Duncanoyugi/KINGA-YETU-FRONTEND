@@ -9,7 +9,11 @@ const LOGOUT_FLAG_KEY = 'immunitrack_logged_out';
 // Helper function to get token from localStorage using consistent key
 const getStoredToken = (): string | null => {
   try {
-    return localStorage.getItem(STORAGE_KEYS.TOKEN);
+    let token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    if (token && token.startsWith('"') && token.endsWith('"')) {
+      token = token.slice(1, -1);
+    }
+    return token;
   } catch (error) {
     console.error('Error reading token from localStorage:', error);
     return null;
@@ -90,17 +94,17 @@ const authSlice = createSlice({
       setStoredToken(token);
       clearLoggedOutFlag();
     },
-    
+
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
-    
+
     updateUser: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
       }
     },
-    
+
     logout: (state) => {
       state.user = null;
       state.token = null;
@@ -108,36 +112,36 @@ const authSlice = createSlice({
       removeStoredToken();
       setLoggedOutFlag(true);
     },
-    
+
     // Action to clear the logout flag when user successfully logs in
     clearLogoutFlag: (state) => {
       state.loggedOut = false;
       clearLoggedOutFlag();
     },
-    
+
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
-    
+
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    
+
     clearError: (state) => {
       state.error = null;
     },
-    
+
     updateToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
       setStoredToken(action.payload);
     },
-    
+
     updateUserRole: (state, action: PayloadAction<User['role']>) => {
       if (state.user) {
         state.user.role = action.payload;
       }
     },
-    
+
     updateVerificationStatus: (state, action: PayloadAction<{
       email?: boolean;
       phone?: boolean;
@@ -154,13 +158,13 @@ const authSlice = createSlice({
   },
 });
 
-export const { 
-  setCredentials, 
+export const {
+  setCredentials,
   setUser,
   updateUser,
-  logout, 
+  logout,
   clearLogoutFlag,
-  setLoading, 
+  setLoading,
   setError,
   clearError,
   updateToken,

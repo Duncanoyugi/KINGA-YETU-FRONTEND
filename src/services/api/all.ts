@@ -404,6 +404,9 @@ export const apiService = {
     getAlerts: (params?: any) =>
       api.get(API_ENDPOINTS.ANALYTICS.ALERTS, { params }),
       
+    getCountyAdminDashboard: (params?: any) =>
+      api.get(API_ENDPOINTS.ANALYTICS.COUNTY_DASHBOARD, { params }),
+      
     export: (type: string, params?: any) =>
       api.download(API_ENDPOINTS.ANALYTICS.EXPORT(type), `analytics-${type}.csv`, { params }),
   },

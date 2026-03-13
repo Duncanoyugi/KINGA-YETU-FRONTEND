@@ -30,6 +30,17 @@ const apiErrorMiddleware: Middleware<{}, unknown, Dispatch<AnyAction>> = () => (
   const typedAction = action as AnyAction;
   // Check if action is a rejected API action
   if (typedAction.type.endsWith('/rejected') && typedAction.payload) {
+    const error = typedAction.payload;
+    const endpointName = typedAction?.meta?.arg?.endpointName;
+    
+    // Silently handle 401 errors from /me endpoint - this happens when 
+    // user has a stale token on landing page and is expected behavior
+    if (error.status === 401 && endpointName === 'getCurrentUser') {
+      // Don't log this expected error - user is not authenticated
+      return next(action);
+    }
+    
+    // Log other API errors
     console.error('API Error:', typedAction.payload);
     
     // You can add global error handling here

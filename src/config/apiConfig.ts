@@ -181,6 +181,7 @@ export const API_ENDPOINTS = {
   // Analytics endpoints
   ANALYTICS: {
     DASHBOARD: '/analytics/dashboard',
+    COUNTY_DASHBOARD: '/analytics/county-dashboard',
     COVERAGE: '/analytics/coverage',
     DROPOUT: '/analytics/dropout',
     PERFORMANCE: '/analytics/performance',
@@ -197,8 +198,8 @@ export const API_ENDPOINTS = {
 
   // System endpoints
   SYSTEM: {
-    HEALTH: '/system/health',
-    STATS: '/system/stats',
+    HEALTH: '/health',
+    STATS: '/analytics/system-stats',
     CONFIG: '/system/config',
     LOGS: '/system/logs',
     BACKUP: '/system/backup',

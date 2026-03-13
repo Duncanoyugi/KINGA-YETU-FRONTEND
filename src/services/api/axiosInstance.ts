@@ -22,17 +22,22 @@ export const axiosInstance = axios.create({
 // Request interceptor to add auth token
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
-    
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    let token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+
+    if (token) {
+      if (token.startsWith('"') && token.endsWith('"')) {
+        token = token.slice(1, -1);
+      }
+      if (config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-    
+
     // Add request timestamp for debugging
     if (isDevelopment()) {
       (config as any).metadata = { startTime: new Date().getTime() };
     }
-    
+
     return config;
   },
   (error: AxiosError) => {
@@ -53,7 +58,7 @@ axiosInstance.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as ExtendedAxiosRequestConfig;
-    
+
     // Handle request timeout
     if (error.code === 'ECONNABORTED') {
       return Promise.reject({
@@ -76,10 +81,13 @@ axiosInstance.interceptors.response.use(
     // Handle token refresh on 401
     if (status === API_RESPONSE_CODES.UNAUTHORIZED && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
-        const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-        
+        let refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+        if (refreshToken && refreshToken.startsWith('"') && refreshToken.endsWith('"')) {
+          refreshToken = refreshToken.slice(1, -1);
+        }
+
         if (!refreshToken) {
           // No refresh token, redirect to login
           window.location.href = '/login?session=expired';
@@ -112,13 +120,13 @@ axiosInstance.interceptors.response.use(
     if (status === API_RESPONSE_CODES.TOO_MANY_REQUESTS) {
       const retryAfter = error.response.headers['retry-after'];
       const retryCount = originalRequest._retryCount || 0;
-      
+
       if (retryCount < (AXIOS_CONFIG.retry?.retries || 3)) {
         originalRequest._retryCount = retryCount + 1;
-        
-        const delay = retryAfter ? parseInt(retryAfter) * 1000 : 
-                     (AXIOS_CONFIG.retry?.retryDelay?.(retryCount) || 1000);
-        
+
+        const delay = retryAfter ? parseInt(retryAfter) * 1000 :
+          (AXIOS_CONFIG.retry?.retryDelay?.(retryCount) || 1000);
+
         await new Promise(resolve => setTimeout(resolve, delay));
         return axiosInstance(originalRequest);
       }
@@ -127,10 +135,10 @@ axiosInstance.interceptors.response.use(
     // Handle server errors with retry
     if (status >= 500 && status <= 599) {
       const retryCount = originalRequest._retryCount || 0;
-      
+
       if (retryCount < (AXIOS_CONFIG.retry?.retries || 3)) {
         originalRequest._retryCount = retryCount + 1;
-        
+
         const delay = AXIOS_CONFIG.retry?.retryDelay?.(retryCount) || 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         return axiosInstance(originalRequest);
@@ -176,27 +184,27 @@ export const apiRequest = async <T>(
 
 // HTTP method shortcuts
 export const api = {
-  get: <T>(url: string, config?: AxiosRequestConfig) => 
+  get: <T>(url: string, config?: AxiosRequestConfig) =>
     apiRequest<T>({ ...config, method: 'GET', url }),
-    
-  post: <T>(url: string, data?: any, config?: AxiosRequestConfig) => 
+
+  post: <T>(url: string, data?: any, config?: AxiosRequestConfig) =>
     apiRequest<T>({ ...config, method: 'POST', url, data }),
-    
-  put: <T>(url: string, data?: any, config?: AxiosRequestConfig) => 
+
+  put: <T>(url: string, data?: any, config?: AxiosRequestConfig) =>
     apiRequest<T>({ ...config, method: 'PUT', url, data }),
-    
-  patch: <T>(url: string, data?: any, config?: AxiosRequestConfig) => 
+
+  patch: <T>(url: string, data?: any, config?: AxiosRequestConfig) =>
     apiRequest<T>({ ...config, method: 'PATCH', url, data }),
-    
-  delete: <T>(url: string, config?: AxiosRequestConfig) => 
+
+  delete: <T>(url: string, config?: AxiosRequestConfig) =>
     apiRequest<T>({ ...config, method: 'DELETE', url }),
-    
+
   upload: <T>(url: string, file: File | FormData, onProgress?: (percentage: number) => void) => {
     const formData = file instanceof FormData ? file : new FormData();
     if (!(file instanceof FormData)) {
       formData.append('file', file);
     }
-    
+
     return apiRequest<T>({
       method: 'POST',
       url,
@@ -210,7 +218,7 @@ export const api = {
       },
     });
   },
-  
+
   download: async (url: string, filename?: string, config?: AxiosRequestConfig) => {
     const response = await axiosInstance({
       ...config,
@@ -218,11 +226,11 @@ export const api = {
       url,
       responseType: 'blob',
     });
-    
-    const blob = new Blob([response.data], { 
-      type: response.headers['content-type'] 
+
+    const blob = new Blob([response.data], {
+      type: response.headers['content-type']
     });
-    
+
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
@@ -231,7 +239,7 @@ export const api = {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(downloadUrl);
-    
+
     return response.data;
   },
 };

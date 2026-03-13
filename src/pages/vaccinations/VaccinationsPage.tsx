@@ -1,23 +1,24 @@
 import React from 'react';
 import { useChildren } from '@/features/children/childrenHooks';
 import { Card } from '@/components/common/Card';
+import { Badge } from '@/components/common/Badge';
 import { Spinner } from '@/components/common/Spinner';
 import { formatDate } from '@/utils/dateHelpers';
 
-const Appointments: React.FC = () => {
+const VaccinationsPage: React.FC = () => {
   const { children, isLoading: childrenLoading } = useChildren();
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold mb-4">Appointments</h1>
-      <p className="mb-6 text-gray-700">View upcoming and past vaccination appointments for your children.</p>
+      <h1 className="text-2xl font-bold mb-4">Vaccinations</h1>
+      <p className="mb-6 text-gray-700">View your children's vaccination schedules and immunization records.</p>
       {childrenLoading ? (
         <div className="flex justify-center items-center py-12">
           <Spinner size="lg" />
         </div>
       ) : (
         children.length === 0 ? (
-          <div className="text-center text-gray-500">No children found. Please add a child to view appointments.</div>
+          <div className="text-center text-gray-500">No children found. Please add a child to view vaccinations.</div>
         ) : (
           children.map((child) => (
             <Card key={child.id} className="mb-6">
@@ -26,27 +27,34 @@ const Appointments: React.FC = () => {
                   <div className="font-semibold text-lg text-blue-700">{child.firstName} {child.middleName} {child.lastName}</div>
                   <div className="text-sm text-gray-500">DOB: {formatDate(child.dateOfBirth)}</div>
                 </div>
+                <div className="mt-2 md:mt-0">
+                  <Badge variant="primary">{child.gender}</Badge>
+                </div>
               </div>
               <Card.Body>
-                {child.reminders && child.reminders.length > 0 ? (
+                {child.schedules && child.schedules.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead>
                         <tr>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vaccine</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Appointment Date</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {child.reminders.map((reminder) => (
-                          <tr key={reminder.id}>
-                            <td className="px-4 py-2 whitespace-nowrap">{reminder.vaccineId}</td>
-                            <td className="px-4 py-2 whitespace-nowrap">{formatDate(reminder.scheduledFor)}</td>
+                        {child.schedules.map((schedule) => (
+                          <tr key={schedule.id}>
+                            <td className="px-4 py-2 whitespace-nowrap">{schedule.vaccine?.name || schedule.vaccineId}</td>
+                            <td className="px-4 py-2 whitespace-nowrap">{formatDate(schedule.dueDate)}</td>
                             <td className="px-4 py-2 whitespace-nowrap">
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${reminder.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : reminder.status === 'SENT' ? 'bg-blue-100 text-blue-800' : reminder.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : reminder.status === 'FAILED' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'}`}>
-                                {reminder.status.charAt(0) + reminder.status.slice(1).toLowerCase()}
-                              </span>
+                              <Badge variant={
+                                schedule.status === 'ADMINISTERED' ? 'success' :
+                                schedule.status === 'MISSED' ? 'danger' :
+                                schedule.status === 'SCHEDULED' ? 'warning' : 'default'
+                              }>
+                                {schedule.status.charAt(0) + schedule.status.slice(1).toLowerCase()}
+                              </Badge>
                             </td>
                           </tr>
                         ))}
@@ -54,7 +62,7 @@ const Appointments: React.FC = () => {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-gray-500">No appointments found for this child.</div>
+                  <div className="text-gray-500">No vaccination schedule found for this child.</div>
                 )}
               </Card.Body>
             </Card>
@@ -65,4 +73,4 @@ const Appointments: React.FC = () => {
   );
 };
 
-export default Appointments;
+export default VaccinationsPage;

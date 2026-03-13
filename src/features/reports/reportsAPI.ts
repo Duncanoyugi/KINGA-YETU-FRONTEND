@@ -66,7 +66,8 @@ export const reportsAPI = createApi({
     getCoverageReport: builder.query<CoverageReportData, ReportParameters>({
       query: (params) => ({
         url: '/coverage',
-        params,
+        method: 'POST',
+        body: params,
       }),
       providesTags: ['Generated'],
     }),
@@ -74,7 +75,8 @@ export const reportsAPI = createApi({
     getMissedVaccinesReport: builder.query<MissedVaccinesData, ReportParameters>({
       query: (params) => ({
         url: '/missed-vaccines',
-        params,
+        method: 'POST',
+        body: params,
       }),
       providesTags: ['Generated'],
     }),

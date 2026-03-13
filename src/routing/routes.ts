@@ -18,7 +18,6 @@ export const ROUTES = {
   PARENT_DASHBOARD: '/dashboard/parent',
   HEALTH_WORKER_DASHBOARD: '/dashboard/health-worker',
   ADMIN_DASHBOARD: '/dashboard/admin',
-  COUNTY_ADMIN_DASHBOARD: '/dashboard/county-admin',
 
   // Children
   ADD_CHILD: '/children/add',

@@ -25,22 +25,23 @@ export const authAPI = createApi({
     },
   }),
   endpoints: (builder) => ({
-        // OTP endpoints
-        requestOTP: builder.mutation<any, OtpRequest>({
-          query: (data) => ({
-            url: '/otp/generate',
-            method: 'POST',
-            body: data,
-          }),
-        }),
+    // OTP endpoints (use absolute URLs to hit /otp controller)
+    requestOTP: builder.mutation<any, OtpRequest>({
+      query: (data) => ({
+        url: `${API_URL}/otp/generate`,
+        method: 'POST',
+        body: data,
+      }),
+    }),
 
-        verifyOTP: builder.mutation<{ valid: boolean }, OtpVerification>({
-          query: (data) => ({
-            url: '/otp/verify',
-            method: 'POST',
-            body: data,
-          }),
-        }),
+    verifyOTP: builder.mutation<{ valid: boolean }, OtpVerification>({
+      query: (data) => ({
+        url: `${API_URL}/otp/verify`,
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
     // Public endpoints
     login: builder.mutation<AuthResponse, LoginCredentials>({
       query: (credentials) => ({
@@ -95,7 +96,7 @@ export const authAPI = createApi({
       query: () => '/me',
     }),
 
-    refreshToken: builder.mutation<{ token: string }, void>({
+    refreshToken: builder.mutation<{ accessToken: string }, void>({
       query: () => ({
         url: '/refresh',
         method: 'POST',

@@ -53,7 +53,11 @@ export const useNotifications = (userId?: string) => {
   // Update state from queries
   useEffect(() => {
     if (notificationsData) {
-      dispatch(setNotifications(notificationsData));
+      // Handle both array and paginated response format
+      const notificationsArray = Array.isArray(notificationsData) 
+        ? notificationsData 
+        : (notificationsData as any)?.data || [];
+      dispatch(setNotifications(notificationsArray));
     }
   }, [notificationsData, dispatch]);
 
@@ -88,11 +92,13 @@ export const useNotifications = (userId?: string) => {
 
   // Get unread notifications
   const unreadNotifications = useMemo(() => {
+    if (!Array.isArray(notifications)) return [];
     return notifications.filter((n: Notification) => !n.isRead);
   }, [notifications]);
 
   // Get notifications by type
   const getNotificationsByType = useCallback((type: string) => {
+    if (!Array.isArray(notifications)) return [];
     return notifications.filter((n: Notification) => n.type === type);
   }, [notifications]);
 
@@ -126,18 +132,24 @@ export const useReminders = (parentId?: string, childId?: string) => {
 
   useEffect(() => {
     if (remindersData) {
-      dispatch(setReminders(remindersData));
+      // Handle both array and paginated response format
+      const remindersArray = Array.isArray(remindersData) 
+        ? remindersData 
+        : (remindersData as any)?.data || [];
+      dispatch(setReminders(remindersArray));
     }
   }, [remindersData, dispatch]);
 
   // Filter reminders by childId when provided
   const filteredReminders = useMemo(() => {
+    if (!Array.isArray(reminders)) return [];
     if (!childId) return reminders;
     return reminders.filter((r: Reminder) => r.childId === childId);
   }, [reminders, childId]);
 
   // Filter reminders by child
   const getRemindersByChild = useCallback((id: string) => {
+    if (!Array.isArray(reminders)) return [];
     return reminders.filter((r: Reminder) => r.childId === id);
   }, [reminders]);
 
@@ -159,6 +171,7 @@ export const useReminders = (parentId?: string, childId?: string) => {
 
   // Get reminders by status
   const getRemindersByStatus = useCallback((status: string) => {
+    if (!Array.isArray(filteredReminders)) return [];
     return filteredReminders.filter((r: Reminder) => r.status === status);
   }, [filteredReminders]);
 
