@@ -42,7 +42,7 @@ export const EditChild: React.FC = () => {
           dateOfBirth: child.dateOfBirth.split('T')[0],
           gender: child.gender,
           birthCertificateNo: child.birthCertificateNo,
-          birthFacilityId: child.birthFacilityId,
+          birthFacilityName: child.birthFacility?.name || '',
           notes: child.notes,
         });
       } catch (err: any) {
@@ -174,9 +174,9 @@ export const EditChild: React.FC = () => {
               />
 
               <Input
-                label="Birth Facility ID (Optional)"
-                {...register('birthFacilityId')}
-                error={errors.birthFacilityId?.message}
+                label="Birth Facility Name (Optional)"
+                {...register('birthFacilityName')}
+                error={errors.birthFacilityName?.message}
               />
             </div>
 

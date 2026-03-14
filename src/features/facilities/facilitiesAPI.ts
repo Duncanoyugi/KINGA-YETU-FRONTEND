@@ -8,6 +8,9 @@ import type {
 import type { RootState } from '@/app/store/store';
 import { API_URL } from '@/config/environment';
 
+// Re-export types for convenience
+export type { CreateFacilityRequest, UpdateFacilityRequest, FacilityFilter, Facility };
+
 export const facilitiesAPI = createApi({
   reducerPath: 'facilitiesAPI',
   baseQuery: fetchBaseQuery({

@@ -72,7 +72,10 @@ const AppRouter: React.FC = () => {
           <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
           {/* Other generic dashboard pages (children, appointments, etc.) go here */}
           <Route path={ROUTES.CHILDREN_LIST} element={<ChildrenList />} />
-          <Route path={ROUTES.ADD_CHILD} element={<AddChild />} />
+          <Route element={<ParentDashboardLayout />}>
+            <Route path="/dashboard/parent/children/add" element={<AddChild />} />
+            <Route path={ROUTES.ADD_CHILD} element={<AddChild />} />
+          </Route>
           <Route path={ROUTES.CHILD_PROFILE} element={<ChildProfile />} />
           <Route path={ROUTES.EDIT_CHILD} element={<EditChild />} />
           <Route path={ROUTES.CHILD_HISTORY} element={<ChildHistory />} />
@@ -129,7 +132,7 @@ const AppRouter: React.FC = () => {
       </Route>
 
       <Route element={<ProtectedRoute roles={['HEALTH_WORKER']} />}>
-        <Route path={ROUTES.HEALTH_WORKER_DASHBOARD} element={<HealthWorkerDashboard />} />
+        <Route path={`${ROUTES.HEALTH_WORKER_DASHBOARD}/*`} element={<HealthWorkerDashboard />} />
       </Route>
 
       <Route element={<ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']} />}>

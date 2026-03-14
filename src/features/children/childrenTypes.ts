@@ -153,6 +153,7 @@ export interface CreateChildRequest {
   gender: Gender;
   birthCertificateNo?: string;
   birthFacilityId?: string;
+  parentId?: string;
 }
 
 export interface UpdateChildRequest {

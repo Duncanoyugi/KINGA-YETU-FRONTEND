@@ -177,7 +177,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               <p className="text-gray-500">Here's your children's immunization overview</p>
             </div>
             <Button
-              // onClick={() => setShowAddChildModal(true)}
+              onClick={() => navigate('/dashboard/parent/children/add')}
               leftIcon={<PlusIcon className="h-5 w-5" />}
               className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg"
             >

@@ -20,6 +20,7 @@ export const ROUTES = {
   ADMIN_DASHBOARD: '/dashboard/admin',
 
   // Children
+  PARENT_ADD_CHILD: '/dashboard/parent/children/add',
   ADD_CHILD: '/children/add',
   CHILDREN_LIST: '/children',
   CHILD_PROFILE: '/children/:id',

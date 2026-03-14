@@ -102,16 +102,18 @@ export const createChildSchema = z.object({
   ),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
   birthCertificateNo: z.string().regex(
-    VALIDATION_PATTERNS.BIRTH_CERTIFICATE,
-    messages.birthCertificate
+    /^[A-Z0-9]{8,20}$/,
+    'Birth certificate number must be 8-20 uppercase alphanumeric characters (no spaces/hyphens)'
   ).optional(),
-  birthFacilityId: z.string().uuid(messages.uuid).optional(),
+  birthFacilityName: z.string().optional(),
+  parentId: z.string().optional(),
+
   birthWeight: z.number().positive(messages.positive).max(10, messages.maxValue(10)).optional(),
   birthHeight: z.number().positive(messages.positive).max(100, messages.maxValue(100)).optional(),
   notes: z.string().max(500, messages.maxLength(500)).optional(),
 });
 
-export const updateChildSchema = createChildSchema.partial();
+export const updateChildSchema = createChildSchema.partial().omit({ parentId: true });
 
 export const addGrowthRecordSchema = z.object({
   measurementDate: z.string().min(1, messages.required).refine(
@@ -219,22 +221,15 @@ export const linkChildSchema = z.object({
 // Facility schemas
 export const createFacilitySchema = z.object({
   name: z.string().min(2).max(100),
-  type: z.enum(['HOSPITAL', 'HEALTH_CENTER', 'DISPENSARY', 'CLINIC', 'MOBILE_CLINIC', 'PRIVATE_PRACTICE']),
+  type: z.enum(['HOSPITAL', 'HEALTH_CENTER', 'DISPENSARY', 'CLINIC', 'MOBILE_CLINIC', 'PRIVATE_PRACTICE', 'MATERNITY', 'NURSING_HOME']),
   code: z.string().min(2).max(20),
   mflCode: z.string().regex(VALIDATION_PATTERNS.MFL_CODE, messages.mflCode).optional(),
   county: z.string().min(2).max(50),
   subCounty: z.string().min(2).max(50),
   ward: z.string().optional(),
   address: z.string().optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
   phone: z.string().regex(VALIDATION_PATTERNS.PHONE, messages.phone).optional(),
   email: z.string().email(messages.email).optional(),
-  owner: z.enum(['GOVERNMENT', 'PRIVATE', 'MISSION', 'NGO', 'COMMUNITY', 'OTHER']),
-  level: z.enum(['LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4', 'LEVEL_5', 'LEVEL_6']),
-  emergencyServices: z.boolean().default(false),
-  maternityServices: z.boolean().default(false),
-  immunizationServices: z.boolean().default(true),
 });
 
 // Report schemas

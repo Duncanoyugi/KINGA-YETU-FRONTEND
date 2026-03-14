@@ -50,16 +50,13 @@ export interface CreateFacilityRequest {
   name: string;
   code: string;
   type: FacilityType;
-  address: string;
+  mflCode?: string;
   county: string;
   subCounty: string;
-  ward: string;
-  phone: string;
-  email: string;
-  inCharge: string;
-  inChargePhone: string;
-  services: string[];
-  operatingHours: OperatingHours;
+  ward?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
 }
 
 export interface UpdateFacilityRequest {

@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { FacilitySetupModal } from './FacilitySetupModal';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import {
   // Navigation & Layout
   Menu,
@@ -50,7 +54,12 @@ import { useGetSchedulesQuery, useGetUpcomingSchedulesQuery } from '@/features/s
 import { useGetChildrenQuery } from '@/features/children/childrenAPI';
 import { useGetInventoryQuery, useGetStockAlertsQuery } from '@/features/vaccines/vaccinesAPI';
 import { useGetRealTimeStatsQuery, useGetDashboardMetricsQuery } from '@/features/analytics/analyticsAPI';
-import { useAuth } from '@/hooks/useAuth';
+
+import ChildrenList from '@/pages/children/ChildrenList';
+import Appointments from '@/pages/appointments/Appointments';
+import ReportsDashboard from '@/pages/reports/ReportsDashboard';
+import VaccineInventory from '@/pages/vaccines/VaccineInventory';
+import SettingsPage from '@/pages/settings/Settings';
 
 // Loading spinner component
 const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) => {
@@ -69,6 +78,16 @@ type AppointmentStatus = 'checked-in' | 'waiting' | 'scheduled' | 'completed' | 
 type StockStatus = 'ok' | 'low' | 'critical';
 type AlertType = 'critical' | 'warning' | 'info' | 'success';
 type ViewMode = 'dashboard' | 'appointments' | 'children' | 'inventory' | 'reports' | 'settings';
+
+const HEALTH_WORKER_BASE_PATH = '/dashboard/health-worker';
+const HEALTH_WORKER_ROUTE_MAP: Record<ViewMode, string> = {
+  dashboard: HEALTH_WORKER_BASE_PATH,
+  appointments: `${HEALTH_WORKER_BASE_PATH}/appointments`,
+  children: `${HEALTH_WORKER_BASE_PATH}/children`,
+  inventory: `${HEALTH_WORKER_BASE_PATH}/inventory`,
+  reports: `${HEALTH_WORKER_BASE_PATH}/reports`,
+  settings: `${HEALTH_WORKER_BASE_PATH}/settings`,
+};
 
 interface Appointment {
   id: string;
@@ -219,6 +238,8 @@ const Sidebar: React.FC<{
     { id: 'settings' as ViewMode, label: 'Settings', icon: Settings },
   ];
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
   return (
     <motion.aside
       initial={{ width: isCollapsed ? 80 : 280 }}
@@ -267,7 +288,10 @@ const Sidebar: React.FC<{
               key={item.id}
               whileHover={{ x: 4 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => onViewChange(item.id)}
+              onClick={() => {
+                onViewChange(item.id);
+                navigate(HEALTH_WORKER_ROUTE_MAP[item.id] || HEALTH_WORKER_BASE_PATH);
+              }}
               className={`
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
                 ${isActive 
@@ -291,18 +315,18 @@ const Sidebar: React.FC<{
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold">
-                NW
+                {user?.fullName ? user.fullName.split(' ').map((n: string) => n[0]).join('') : 'HW'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  Nurse Wambui
+                  {user?.fullName || 'Health Worker'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  wambui@immunitrack.com
+                  {user?.email || ''}
                 </p>
               </div>
             </div>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors">
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors" onClick={() => navigate('/login')}>
               <LogOut className="h-4 w-4" />
               <span>Log Out</span>
             </button>
@@ -310,9 +334,9 @@ const Sidebar: React.FC<{
         ) : (
           <div className="flex flex-col items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold">
-              NW
+              {user?.fullName ? user.fullName.split(' ').map((n: string) => n[0]).join('') : 'HW'}
             </div>
-            <button className="p-2 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors">
+            <button className="p-2 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors" onClick={() => navigate('/login')}>
               <LogOut className="h-5 w-5" />
             </button>
           </div>
@@ -329,6 +353,7 @@ const Header: React.FC<{
   onInventoryClick: () => void;
   onRegisterClick: () => void;
 }> = ({ greeting, facilityName, date, onInventoryClick, onRegisterClick }) => {
+  const { user } = useAuth();
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -349,7 +374,7 @@ const Header: React.FC<{
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
-              {greeting}, Nurse Wambui! <span className="inline-block animate-wave">👩‍⚕️</span>
+              {greeting}, {user?.fullName || 'Health Worker'}! <span className="inline-block animate-wave">👩‍⚕️</span>
             </h1>
             <p className="text-white/90 text-sm md:text-base">
               {facilityName} • {date}
@@ -916,12 +941,28 @@ const HealthWorkerDashboard: React.FC = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Get current user from auth
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const path = location.pathname;
+    const nextView: ViewMode =
+      path.startsWith(HEALTH_WORKER_ROUTE_MAP.appointments) ? 'appointments' :
+      path.startsWith(HEALTH_WORKER_ROUTE_MAP.children) ? 'children' :
+      path.startsWith(HEALTH_WORKER_ROUTE_MAP.inventory) ? 'inventory' :
+      path.startsWith(HEALTH_WORKER_ROUTE_MAP.reports) ? 'reports' :
+      path.startsWith(HEALTH_WORKER_ROUTE_MAP.settings) ? 'settings' :
+      'dashboard';
+    setActiveView(nextView);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   // Fetch real-time stats
   const { data: realtimeStats, isLoading: realtimeLoading } = useGetRealTimeStatsQuery(undefined, {
     pollingInterval: 60000,
   });
+
 
   // Fetch dashboard metrics
   const today = new Date().toISOString().split('T')[0];
@@ -1063,8 +1104,22 @@ const HealthWorkerDashboard: React.FC = () => {
     day: 'numeric',
   });
 
-  // Get user info
+// Get user info
   const facilityName = user?.healthWorker?.facility?.name || 'Your Facility';
+  
+  // Facility details modal state
+  const [showFacilityModal, setShowFacilityModal] = useState(false);
+  
+  React.useEffect(() => {
+    if (user && user.role === 'HEALTH_WORKER' && !user.healthWorker?.facility) {
+      setShowFacilityModal(true);
+    }
+  }, [user]);
+
+  const handleFacilitySuccess = async () => {
+    await refetchUser();
+  };
+
 
   const handleRecordClick = (appointmentId: string) => {
     console.log('Record vaccination for appointment:', appointmentId);
@@ -1076,10 +1131,12 @@ const HealthWorkerDashboard: React.FC = () => {
 
   const handleInventoryClick = () => {
     setActiveView('inventory');
+    navigate(HEALTH_WORKER_ROUTE_MAP.inventory);
   };
 
   const handleRegisterClick = () => {
-    console.log('Register new child');
+    // Keep the health worker shell while registering a child
+    navigate(HEALTH_WORKER_ROUTE_MAP.children);
   };
 
   // Show loading state
@@ -1087,6 +1144,15 @@ const HealthWorkerDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Facility Setup Modal */}
+      {showFacilityModal && (
+        <FacilitySetupModal 
+          isOpen={showFacilityModal}
+          onClose={() => setShowFacilityModal(false)}
+          onSuccess={handleFacilitySuccess}
+        />
+      )}
+
       {/* Sidebar */}
       <Sidebar
         activeView={activeView}
@@ -1102,7 +1168,6 @@ const HealthWorkerDashboard: React.FC = () => {
       >
         <Menu className="h-6 w-6 text-gray-700 dark:text-gray-300" />
       </button>
-
       {/* Main Content */}
       <main
         className={`
@@ -1111,66 +1176,77 @@ const HealthWorkerDashboard: React.FC = () => {
           p-4 md:p-6 lg:p-8
         `}
       >
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
-          <Header
-            greeting={greeting}
-            facilityName={facilityName}
-            date={currentDate}
-            onInventoryClick={handleInventoryClick}
-            onRegisterClick={handleRegisterClick}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <Header
+                  greeting={greeting}
+                  facilityName={facilityName}
+                  date={currentDate}
+                  onInventoryClick={handleInventoryClick}
+                  onRegisterClick={handleRegisterClick}
+                />
+                {/* Stats Grid */}
+                {isLoading ? (
+                  <div className="flex justify-center py-12">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                ) : (
+                  <StatsGrid
+                    appointments={stats.appointments}
+                    vaccinations={stats.vaccinations}
+                    children={stats.children}
+                    alerts={stats.alerts}
+                    onStatClick={(stat) => console.log('Stat clicked:', stat)}
+                  />
+                )}
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column - Appointments & Children */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <AppointmentsSection
+                      appointments={appointments}
+                      upcoming={upcomingAppointments}
+                      searchTerm={searchTerm}
+                      onSearchChange={setSearchTerm}
+                      onRecordClick={handleRecordClick}
+                    />
+                    <ChildrenTable
+                      children={dashboardChildren}
+                      onViewAll={() => navigate(HEALTH_WORKER_ROUTE_MAP.children)}
+                      onViewChild={handleViewChild}
+                    />
+                  </div>
+                  {/* Right Column - Alerts, Queue, Inventory */}
+                  <div className="space-y-6">
+                    <AlertsWidget
+                      alerts={alerts}
+                      onViewAll={() => navigate(HEALTH_WORKER_ROUTE_MAP.reports)}
+                    />
+                    <QueueSummary queue={queueSummary} />
+                    <InventorySummary
+                      stockItems={stockItems}
+                      onManage={() => navigate(HEALTH_WORKER_ROUTE_MAP.inventory)}
+                    />
+                  </div>
+                </div>
+              </div>
+            }
           />
 
-          {/* Stats Grid */}
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : (
-            <StatsGrid
-              appointments={stats.appointments}
-              vaccinations={stats.vaccinations}
-              children={stats.children}
-              alerts={stats.alerts}
-              onStatClick={(stat) => console.log('Stat clicked:', stat)}
-            />
-          )}
+          {/* Health worker sub-pages (keep shell) */}
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/children" element={<ChildrenList />} />
+          <Route path="/inventory" element={<VaccineInventory />} />
+          <Route path="/reports" element={<ReportsDashboard />} />
+          <Route path="/settings" element={<SettingsPage />} />
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Appointments & Children */}
-            <div className="lg:col-span-2 space-y-6">
-              <AppointmentsSection
-                appointments={appointments}
-                upcoming={upcomingAppointments}
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                onRecordClick={handleRecordClick}
-              />
-
-              <ChildrenTable
-                children={dashboardChildren}
-                onViewAll={() => setActiveView('children')}
-                onViewChild={handleViewChild}
-              />
-            </div>
-
-            {/* Right Column - Alerts, Queue, Inventory */}
-            <div className="space-y-6">
-              <AlertsWidget
-                alerts={alerts}
-                onViewAll={() => setActiveView('reports')}
-              />
-
-              <QueueSummary queue={queueSummary} />
-
-              <InventorySummary
-                stockItems={stockItems}
-                onManage={() => setActiveView('inventory')}
-              />
-            </div>
-          </div>
-        </div>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to={HEALTH_WORKER_BASE_PATH} replace />} />
+        </Routes>
       </main>
     </div>
   );

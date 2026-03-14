@@ -91,10 +91,14 @@ export const useChildren = () => {
   }, [dispatch]);
 
   // Create child
-  const createChild = useCallback(async (childData: CreateChildRequest) => {
+    const createChild = useCallback(async (childData: CreateChildRequest) => {
     dispatch(setLoading(true));
     try {
-      const newChild = await createChildMutation(childData).unwrap();
+      const payload = { ...childData };
+      if (user?.id) {
+        payload.parentId = user.id;
+      }
+      const newChild = await createChildMutation(payload).unwrap();
       dispatch(addChild(newChild));
       toast.success('Child registered successfully');
       return newChild;

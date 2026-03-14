@@ -195,10 +195,10 @@ export const ChildRegistrationModal: React.FC<ChildRegistrationModalProps> = ({
                 />
                 
                 <Input
-                  label="Birth Facility ID"
-                  {...register('birthFacilityId')}
-                  error={errors.birthFacilityId?.message}
-                  placeholder="Facility UUID"
+                  label="Birth Facility"
+                  {...register('birthFacilityName')}
+                  error={errors.birthFacilityName?.message}
+                  placeholder="Enter facility name (e.g., Nairobi Hospital)"
                 />
                 
                 <Input
