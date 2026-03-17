@@ -123,7 +123,9 @@ export const useReminders = (parentId?: string, childId?: string) => {
   const { user } = useAuth();
   const { reminders } = useAppSelector((state) => state.notifications);
   
-  const targetParentId = parentId || (user?.role === 'PARENT' ? user.id : undefined);
+  // FIX: Use parentProfile.id instead of user.id for parentId
+  // user.id is User's ID, but we need Parent's ID for the API
+  const targetParentId = parentId || (user?.role === 'PARENT' ? user.parentProfile?.id : undefined);
 
   const { data: remindersData, refetch: refetchReminders } = useGetParentRemindersQuery(
     targetParentId!,

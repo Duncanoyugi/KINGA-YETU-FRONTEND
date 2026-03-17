@@ -95,7 +95,13 @@ export const useChildren = () => {
     dispatch(setLoading(true));
     try {
       const payload = { ...childData };
-      if (user?.id) {
+      // FIX: Use parentProfile.id instead of user.id
+      // user.id is the User's ID, but we need the Parent's ID
+      if (user?.parentProfile?.id) {
+        payload.parentId = user.parentProfile.id;
+      } else if (user?.id) {
+        // Fallback: If parentProfile is not available, log a warning
+        console.warn('[useChildren] parentProfile not found for user. Using user.id as parentId - this may cause issues.');
         payload.parentId = user.id;
       }
       const newChild = await createChildMutation(payload).unwrap();
@@ -110,7 +116,7 @@ export const useChildren = () => {
     } finally {
       dispatch(setLoading(false));
     }
-  }, [dispatch, createChildMutation]);
+  }, [dispatch, createChildMutation, user]);
 
   // Update child
   const updateChildDetails = useCallback(async (id: string, data: UpdateChildRequest) => {
