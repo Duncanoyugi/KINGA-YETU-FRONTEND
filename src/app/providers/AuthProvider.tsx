@@ -102,6 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Store token and user in localStorage
       setToken(response.accessToken);
       setUser(response.user);
+      
+      console.log('[AuthProvider] Login response user:', response.user);
+      console.log('[AuthProvider] Login response user.parentProfile:', response.user?.parentProfile);
 
       // Update Redux State - setCredentials clears loggedOut flag
       dispatch(setCredentials({
@@ -179,6 +182,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Case 1: Have both token and user - restore without API call
       if (storedToken && storedUser && !token) {
         console.log('[AuthProvider] Restoring from localStorage (no /me call needed)');
+        console.log('[AuthProvider] Stored user:', storedUser);
+        console.log('[AuthProvider] Stored user.parentProfile:', storedUser?.parentProfile);
         dispatch(setCredentials({
           user: storedUser,
           token: storedToken

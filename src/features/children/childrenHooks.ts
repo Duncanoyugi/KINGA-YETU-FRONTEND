@@ -97,13 +97,19 @@ export const useChildren = () => {
       const payload = { ...childData };
       // FIX: Use parentProfile.id instead of user.id
       // user.id is the User's ID, but we need the Parent's ID
+      console.log('[useChildren] Creating child with user:', user);
+      console.log('[useChildren] user?.parentProfile:', user?.parentProfile);
       if (user?.parentProfile?.id) {
         payload.parentId = user.parentProfile.id;
+        console.log('[useChildren] Using parentProfile.id:', payload.parentId);
       } else if (user?.id) {
         // Fallback: If parentProfile is not available, log a warning
         console.warn('[useChildren] parentProfile not found for user. Using user.id as parentId - this may cause issues.');
         payload.parentId = user.id;
+      } else {
+        console.error('[useChildren] No user found - cannot determine parentId');
       }
+      console.log('[useChildren] Final payload.parentId:', payload.parentId);
       const newChild = await createChildMutation(payload).unwrap();
       dispatch(addChild(newChild));
       toast.success('Child registered successfully');

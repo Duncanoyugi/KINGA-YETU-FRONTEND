@@ -51,11 +51,14 @@ export const childrenAPI = createApi({
     }),
 
     createChild: builder.mutation<Child, CreateChildRequest>({
-      query: (childData) => ({
-        url: '/',
-        method: 'POST',
-        body: childData,
-      }),
+      query: (childData) => {
+        console.log('[childrenAPI] createChild called with data:', childData);
+        return {
+          url: '/',
+          method: 'POST',
+          body: childData,
+        };
+      },
       invalidatesTags: ['Children'],
     }),
 

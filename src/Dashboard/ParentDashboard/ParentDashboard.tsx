@@ -28,7 +28,17 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
   const navigate = useNavigate();
   const { user } = useAuth();
   const { children: childrenData, isLoading: childrenLoading } = useChildren();
-  const { dashboard, isLoading: dashboardLoading } = useParentDashboard(user?.id || '');
+  
+  // DEBUG: Log user object to understand what's happening
+  console.log('[ParentDashboard] User:', user);
+  console.log('[ParentDashboard] user?.parentProfile:', user?.parentProfile);
+  console.log('[ParentDashboard] user?.parentProfile?.id:', user?.parentProfile?.id);
+  console.log('[ParentDashboard] user?.id:', user?.id);
+  
+  // FIX: Use user.parentProfile?.id instead of user.id for parent-related APIs
+  // Also ensure we handle the case where parentProfile might not be loaded yet
+  const parentId = user?.parentProfile?.id || '';
+  const { dashboard, isLoading: dashboardLoading } = useParentDashboard(parentId);
   const { unreadCount } = useNotifications(user?.id);
 
   const [selectedChild, setSelectedChild] = useState<string | null>(null);

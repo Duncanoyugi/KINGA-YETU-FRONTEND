@@ -136,7 +136,10 @@ export const parentsAPI = createApi({
 
     // Dashboard
     getParentDashboard: builder.query<ParentDashboard, string>({
-      query: (parentId) => `/${parentId}/dashboard`,
+      query: (parentId) => {
+        console.log('[parentsAPI] getParentDashboard called with parentId:', parentId);
+        return `/${parentId}/dashboard`;
+      },
       providesTags: (_result, _error, parentId) => [
         { type: 'Parent', id: parentId },
         { type: 'Children', id: parentId },
