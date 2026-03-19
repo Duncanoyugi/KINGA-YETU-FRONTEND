@@ -161,6 +161,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const wasLoggedOut = localStorage.getItem(LOGOUT_FLAG_KEY) === 'true';
       console.log('[AuthProvider] Was logged out flag:', wasLoggedOut);
 
+      // If user was explicitly logged out, don't auto-authenticate
+      if (wasLoggedOut) {
+        console.log('[AuthProvider] User was logged out - not auto-authenticating');
+        setIsLoading(false);
+        return;
+      }
+
       // Get stored values
       const storedToken = getToken();
       const storedUser = getUser();
