@@ -190,20 +190,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }));
         } catch (error) {
           console.error('[AuthProvider] /me failed:', error);
-          // If /me fails, check if we have a stored user with parentProfile
-          if (storedUser?.parentProfile) {
-            console.log('[AuthProvider] Using stored user WITH parentProfile');
-            dispatch(setCredentials({
-              user: storedUser,
-              token: storedToken
-            }));
-          } else if (storedUser) {
-            // Token is invalid or user doesn't have parentProfile - clear everything
-            console.log('[AuthProvider] Stored user has NO parentProfile - clearing invalid session');
-            removeToken();
-            removeUser();
-            localStorage.setItem(LOGOUT_FLAG_KEY, 'true');
-          }
+          // Token is invalid/expired - clear everything
+          console.log('[AuthProvider] Token invalid/expired - clearing session');
+          removeToken();
+          removeUser();
+          localStorage.setItem(LOGOUT_FLAG_KEY, 'true');
         }
         setIsLoading(false);
         return;
