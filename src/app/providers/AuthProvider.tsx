@@ -36,7 +36,7 @@ const LOGOUT_FLAG_KEY = 'immunitrack_logged_out';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useAppDispatch();
-  const { user, token, isLoading: reduxIsLoading, loggedOut } = useAppSelector((state) => state.auth);
+  const { user, token, isLoading: reduxIsLoading } = useAppSelector((state) => state.auth);
   
   // Local loading state for initial auth check
   const [isLoading, setIsLoading] = useState(true);
@@ -153,25 +153,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [dispatch, logoutMutation]);
 
-  // Check authentication status on mount - sync with Redux state
+  // Initialize auth on mount
   useEffect(() => {
     const initAuth = async () => {
       console.log('[AuthProvider] Initializing auth...');
-      
-      // Check if user was explicitly logged out - require re-login
+
       const wasLoggedOut = localStorage.getItem(LOGOUT_FLAG_KEY) === 'true';
       console.log('[AuthProvider] Was logged out flag:', wasLoggedOut);
-      
-      if (wasLoggedOut) {
-        // User was logged out - clear any existing token but don't clear Redux
-        // The Redux state should already be cleared if user explicitly logged out
-        removeToken();
-        removeUser();
-        setIsLoading(false);
-        return;
-      }
 
-      // If we have a token AND user in localStorage, try to restore without calling /me
+      // Get stored values
       const storedToken = getToken();
       const storedUser = getUser();
       
@@ -179,59 +169,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[AuthProvider] Stored user exists:', !!storedUser);
       console.log('[AuthProvider] Redux token exists:', !!token);
       
-      // Case 1: Have both token and user - restore without API call
-      if (storedToken && storedUser && !token) {
-        console.log('[AuthProvider] Restoring from localStorage (no /me call needed)');
-        console.log('[AuthProvider] Stored user:', storedUser);
-        console.log('[AuthProvider] Stored user.parentProfile:', storedUser?.parentProfile);
-        dispatch(setCredentials({
-          user: storedUser,
-          token: storedToken
-        }));
-        setIsLoading(false);
-        return;
-      }
-
-      // Case 2: Have token but no user - don't call /me, just clear invalid token
-      // This prevents 401 errors from showing in console on landing page
-      if (storedToken && !storedUser) {
-        console.log('[AuthProvider] Token exists but no user - clearing invalid token');
-        removeToken();
-        removeUser();
-        localStorage.setItem(LOGOUT_FLAG_KEY, 'true');
-        setIsLoading(false);
-        return;
-      }
-
-      // Case 3: Have token in Redux but not localStorage - try to validate with /me
-      if (storedToken && !token && !wasLoggedOut) {
-        console.log('[AuthProvider] Attempting to restore session...');
+      // IMPORTANT: Always try to get fresh user data from /me when there's a token
+      // This ensures we have the latest parentProfile
+      if (storedToken) {
+        console.log('[AuthProvider] Token found - calling /me to get fresh user data...');
         try {
-          // Try to validate token and get user data
           const userData = await triggerGetCurrentUser().unwrap();
-          console.log('[AuthProvider] Session restored with user:', userData);
+          console.log('[AuthProvider] Fresh user from /me:', userData);
+          console.log('[AuthProvider] Fresh user.parentProfile:', userData?.parentProfile);
           dispatch(setCredentials({
             user: userData,
             token: storedToken
           }));
         } catch (error) {
-          console.error('[AuthProvider] Failed to restore session:', error);
-          // If /me fails but we have a user in localStorage, use it
-          if (storedUser) {
-            console.log('[AuthProvider] Using stored user despite /me failure');
+          console.error('[AuthProvider] /me failed:', error);
+          // If /me fails, check if we have a stored user with parentProfile
+          if (storedUser?.parentProfile) {
+            console.log('[AuthProvider] Using stored user WITH parentProfile');
             dispatch(setCredentials({
               user: storedUser,
               token: storedToken
             }));
-          } else {
-            // Token is invalid, clear it
+          } else if (storedUser) {
+            // Token is invalid or user doesn't have parentProfile - clear everything
+            console.log('[AuthProvider] Stored user has NO parentProfile - clearing invalid session');
             removeToken();
             removeUser();
             localStorage.setItem(LOGOUT_FLAG_KEY, 'true');
           }
         }
+        setIsLoading(false);
+        return;
       }
 
+      console.log('[AuthProvider] No token found - user not authenticated');
       console.log('[AuthProvider] Auth initialization complete');
       setIsLoading(false);
     };
@@ -246,18 +217,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [token]);
 
-  // Compute loading state: combine Redux loading with local initial loading
-  const combinedIsLoading = isLoading || reduxIsLoading;
-
-  const value = {
+  const value: AuthContextType = {
     user,
-    isLoading: combinedIsLoading,
-    isAuthenticated: !!user && !!token && !loggedOut,
+    isLoading: isLoading || reduxIsLoading,
+    isAuthenticated: !!user && !!token,
     login,
     logout: logoutUser,
     refreshUser,
     hasRole,
-    hasPermission
+    hasPermission,
   };
 
   return (
