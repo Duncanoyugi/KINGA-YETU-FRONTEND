@@ -161,9 +161,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const wasLoggedOut = localStorage.getItem(LOGOUT_FLAG_KEY) === 'true';
       console.log('[AuthProvider] Was logged out flag:', wasLoggedOut);
 
-      // If user was explicitly logged out, don't auto-authenticate
+      // If user was explicitly logged out, clear everything and don't auto-authenticate
       if (wasLoggedOut) {
-        console.log('[AuthProvider] User was logged out - not auto-authenticating');
+        console.log('[AuthProvider] User was logged out - clearing session and not auto-authenticating');
+        removeToken();
+        removeUser();
+        localStorage.removeItem(LOGOUT_FLAG_KEY);
+        dispatch(logout());
         setIsLoading(false);
         return;
       }
@@ -175,6 +179,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[AuthProvider] Stored token exists:', !!storedToken);
       console.log('[AuthProvider] Stored user exists:', !!storedUser);
       console.log('[AuthProvider] Redux token exists:', !!token);
+      
+      // Also check if Redux has a token - if so, verify it's still valid
+      // If Redux has token but localStorage doesn't, clear Redux state
+      if (token && !storedToken) {
+        console.log('[AuthProvider] Redux has token but localStorage does not - clearing Redux');
+        dispatch(logout());
+        setIsLoading(false);
+        return;
+      }
       
       // IMPORTANT: Always try to get fresh user data from /me when there's a token
       // This ensures we have the latest parentProfile
@@ -195,6 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           removeToken();
           removeUser();
           localStorage.setItem(LOGOUT_FLAG_KEY, 'true');
+          dispatch(logout());
         }
         setIsLoading(false);
         return;
