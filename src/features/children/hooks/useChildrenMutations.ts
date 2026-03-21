@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/app/store/hooks';
 import { useAuth } from '@/hooks/useAuth';
-import { parentsAPI } from '@/features/parents/parentsAPI';
+
 import { useCreateChildMutation,
   useUpdateChildMutation,
   useDeleteChildMutation,
@@ -23,13 +23,7 @@ export const useChildrenMutations = () => {
         throw new Error('User not authenticated. Cannot register child.');
       }
       
-      // Get parent ID (Parent table ID)
-      const parent = await dispatch(parentsAPI.endpoints.getParentByUserId.initiate(user.id)).unwrap();
-      if (!parent) {
-        throw new Error('Parent profile not found. Please complete your profile setup.');
-      }
-      
-      const payload = { ...childData, parentId: parent.id };
+      const payload = childData; // backend derives parentId from userId
       const result = await createChildMutation(payload).unwrap();
       const newChild = result as Child;
       dispatch(addChildAction(newChild));

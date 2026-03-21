@@ -106,14 +106,14 @@ export const createChildSchema = z.object({
     'Birth certificate number must be 8-20 uppercase alphanumeric characters (no spaces/hyphens)'
   ).optional(),
   birthFacilityName: z.string().optional(),
-  parentId: z.string().optional(),
 
   birthWeight: z.number().positive(messages.positive).max(10, messages.maxValue(10)).optional(),
+
   birthHeight: z.number().positive(messages.positive).max(100, messages.maxValue(100)).optional(),
   notes: z.string().max(500, messages.maxLength(500)).optional(),
 });
 
-export const updateChildSchema = createChildSchema.partial().omit({ parentId: true });
+export const updateChildSchema = createChildSchema.partial();
 
 export const addGrowthRecordSchema = z.object({
   measurementDate: z.string().min(1, messages.required).refine(
