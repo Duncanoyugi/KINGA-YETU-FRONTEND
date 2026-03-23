@@ -13,7 +13,6 @@ import {
   MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildren } from '@/features/children/childrenHooks';
 import { useParentDashboard } from '@/features/parents/parentsHooks';
 import { useNotifications } from '@/features/notifications/notificationsHooks';
 import { Button } from '@/components/common/Button';
@@ -27,7 +26,6 @@ interface ParentDashboardProps {
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly = false, children }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { children: childrenData, isLoading: childrenLoading } = useChildren();
   
   // DEBUG: Log user object to understand what's happening
   console.log('[ParentDashboard] User:', user);
@@ -35,7 +33,6 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
   console.log('[ParentDashboard] user?.parentProfile?.id:', user?.parentProfile?.id);
   console.log('[ParentDashboard] user?.id:', user?.id);
   
-  // FIX: Use user.parentProfile?.id instead of user.id for parent-related APIs
   // Also ensure we handle the case where parentProfile might not be loaded yet
   const parentId = user?.parentProfile?.id || '';
   const { dashboard, isLoading: dashboardLoading } = useParentDashboard(parentId);
@@ -44,12 +41,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
 
   useEffect(() => {
-    if (childrenData && childrenData.length > 0 && !selectedChild) {
-      setSelectedChild(childrenData[0].id);
+    if (dashboard?.children && dashboard.children.length > 0 && !selectedChild) {
+      setSelectedChild(dashboard.children[0].id);
     }
-  }, [childrenData, selectedChild]);
+  }, [dashboard?.children, selectedChild]);
 
-  if (!isLayoutOnly && (childrenLoading || dashboardLoading)) {
+  if (!isLayoutOnly && dashboardLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -60,12 +57,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
     );
   }
 
-  // Use dashboard directly from hook (properly typed)
-  const completionRate = dashboard?.completionRate ?? 0;
-  const completedVaccinations = dashboard?.completedVaccinations ?? 0;
-  const missedVaccinations = dashboard?.missedVaccinations ?? 0;
+  // Use dashboard directly from hook - stats come from dashboard.stats (backend matches this structure)
+  const completionRate = dashboard?.stats?.completionRate ?? 0;
+  const completedVaccinations = dashboard?.stats?.completedVaccinations ?? 0;
+  const missedVaccinations = dashboard?.stats?.missedVaccinations ?? 0;
   const upcomingReminders = dashboard?.upcomingReminders ?? [];
-  const recentActivities = dashboard?.recentActivity ?? [];
+  const childrenList = dashboard?.children ?? [];
 
   // Find the next appointment date from actual reminders
   const nextAppointment = upcomingReminders.length > 0 
@@ -303,11 +300,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
           </div>
 
           {/* Children Overview Cards - Keep existing code */}
-          {childrenData && childrenData.length > 0 && (
+          {childrenList && childrenList.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {childrenData?.map((child) => {
+              {childrenList?.map((child) => {
                 // Get child-specific reminders count
-                const childUpcomingCount = upcomingReminders.filter((r) => r.childId === child.id).length;
+                const childUpcomingCount = upcomingReminders.filter((r) => r.childName?.includes(child.firstName)).length;
                 
                 return (
                   <div
@@ -419,27 +416,22 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </div>
 
               <div className="space-y-3">
-                {recentActivities.length > 0 ? (
-                  recentActivities.slice(0, 4).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        activity.type === 'vaccination' ? 'bg-green-100' :
-                        activity.type === 'appointment' ? 'bg-blue-100' : 'bg-orange-100'
-                      }`}>
-                        {activity.type === 'vaccination' && <CheckCircleIcon className="h-4 w-4 text-green-600" />}
-                        {activity.type === 'appointment' && <CalendarIcon className="h-4 w-4 text-blue-600" />}
-                        {activity.type === 'reminder' && <BellIcon className="h-4 w-4 text-orange-600" />}
+                {childrenList.length > 0 ? (
+                  childrenList.slice(0, 4).map((child) => (
+                    <div key={child.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <UserGroupIcon className="h-4 w-4 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-900">{activity.description}</p>
+                        <p className="text-sm text-gray-900">{child.firstName} {child.lastName}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {formatDate(activity.timestamp)} • {activity.childName}
+                          {Math.floor((new Date().getTime() - new Date(child.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months old • {child.completedVaccinations} vaccines completed
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-gray-500 py-4">No recent activity</p>
+                  <p className="text-center text-gray-500 py-4">No children registered yet</p>
                 )}
               </div>
             </div>

@@ -13,7 +13,6 @@ import {
   useUnlinkChildMutation,
   useGetParentRemindersQuery,
   useGetParentDashboardQuery,
-  useGetParentStatsQuery,
   useUpdateNotificationPreferencesMutation,
 } from './parentsAPI';
 import {
@@ -263,25 +262,26 @@ export const useParentDashboard = (parentId: string) => {
     { skip: !parentId }
   );
 
-  const { data: stats } = useGetParentStatsQuery(parentId, { skip: !parentId });
-
+  // Backend already returns stats in dashboard response - no need for separate stats call
   const summary = useMemo(() => {
     if (!dashboard) return null;
     
     return {
       ...dashboard,
-      completionRate: stats?.completionRate || 0,
+      // Use stats from dashboard response (backend already includes this)
+      completionRate: dashboard.stats?.completionRate || 0,
       nextReminder: dashboard.upcomingReminders?.[0],
       childrenSummary: dashboard.children.map(child => ({
         ...child,
         ageInMonths: Math.floor((new Date().getTime() - new Date(child.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30)),
       })),
     };
-  }, [dashboard, stats]);
+  }, [dashboard]);
 
   return {
     dashboard: summary,
-    stats,
+    // Stats are now included in dashboard.stats
+    stats: dashboard?.stats,
     isLoading,
     refetch,
   };

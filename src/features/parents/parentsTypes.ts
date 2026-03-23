@@ -1,5 +1,4 @@
 import type { User } from '../auth/authTypes';
-import type { Activity } from '@/components/widgets/RecentActivities/RecentActivities.types';
 
 // Parent model from Prisma
 export interface Parent {
@@ -92,13 +91,34 @@ export interface ParentSearchParams {
 }
 
 export interface ParentDashboard {
-  parent: Parent;
-  children: Child[];
-  upcomingReminders: Reminder[];
-  missedVaccinations: number;
-  completedVaccinations: number;
-  childrenCount: number;
-  recentActivity: Activity[];
+  parent: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  children: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    gender: string;
+    completedVaccinations: number;
+    upcomingVaccinations: number;
+  }[];
+  upcomingReminders: {
+    id: string;
+    childName: string;
+    vaccineName?: string;
+    scheduledFor: string;
+    status: string;
+  }[];
+  stats: {
+    totalChildren: number;
+    completedVaccinations: number;
+    upcomingVaccinations: number;
+    missedVaccinations: number;
+    completionRate: number;
+  };
 }
 
 // State interface
