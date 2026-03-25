@@ -1,12 +1,13 @@
 import React from 'react';
-import { useChildren } from '@/features/children/childrenHooks';
+import { useGetChildrenByParentQuery } from '@/features/children/childrenAPI';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Spinner } from '@/components/common/Spinner';
 import { formatDate } from '@/utils/dateHelpers';
 
 const Appointments: React.FC = () => {
-  const { children, isLoading: childrenLoading } = useChildren();
+  // Use getChildrenByParent which returns children WITH schedules
+  const { data: children, isLoading: childrenLoading } = useGetChildrenByParentQuery();
 
   // Helper to get upcoming schedules (future dates with SCHEDULED status)
   const getUpcomingAppointments = (child: any) => {
@@ -44,7 +45,7 @@ const Appointments: React.FC = () => {
     );
   }
 
-  if (children.length === 0) {
+  if (!children || children.length === 0) {
     return (
       <div className="space-y-8">
         <h1 className="text-2xl font-bold mb-4">Appointments</h1>
