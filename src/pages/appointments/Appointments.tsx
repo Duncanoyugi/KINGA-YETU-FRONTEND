@@ -16,9 +16,10 @@ const Appointments: React.FC = () => {
     
     return (child.schedules || [])
       .filter((schedule: any) => {
+        // For upcoming, show SCHEDULED and PENDING statuses with future dates
         const dueDate = new Date(schedule.dueDate);
         dueDate.setHours(0, 0, 0, 0);
-        return dueDate >= today && schedule.status === 'SCHEDULED';
+        return dueDate >= today && (schedule.status === 'SCHEDULED' || schedule.status === 'PENDING');
       })
       .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
   };
@@ -32,7 +33,8 @@ const Appointments: React.FC = () => {
       .filter((schedule: any) => {
         const dueDate = new Date(schedule.dueDate);
         dueDate.setHours(0, 0, 0, 0);
-        return dueDate < today || schedule.status === 'ADMINISTERED' || schedule.status === 'MISSED';
+        // Past appointments = past dates OR already administered/missed/contraindicated
+        return dueDate < today || ['ADMINISTERED', 'MISSED', 'CONTRAINDICATED'].includes(schedule.status);
       })
       .sort((a: any, b: any) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
   };
