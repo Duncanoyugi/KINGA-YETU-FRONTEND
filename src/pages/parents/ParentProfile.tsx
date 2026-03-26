@@ -15,10 +15,9 @@ import {
 
 interface ParentProfileProps {
   isLayoutOnly?: boolean;
-  children?: React.ReactNode;
 }
 
-export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = false, children }) => {
+export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = false }) => {
   const { user } = useAuth();
   const parentId = user?.parentProfile?.id || '';
   const { dashboard, isLoading: dashboardLoading, refetch } = useParentDashboard(parentId);
@@ -213,7 +212,7 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
                     </Button>
                     <Button
                       onClick={handleSave}
-                      isLoading={isSaving}
+                      loading={isSaving}
                       leftIcon={<CheckIcon className="h-5 w-5" />}
                       className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg"
                     >

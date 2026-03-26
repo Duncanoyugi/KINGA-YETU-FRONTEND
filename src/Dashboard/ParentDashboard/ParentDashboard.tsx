@@ -11,6 +11,7 @@ import {
   PlusIcon,
   PhoneIcon,
   MapPinIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 import { useParentDashboard } from '@/features/parents/parentsHooks';

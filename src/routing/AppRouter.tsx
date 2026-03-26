@@ -40,6 +40,7 @@ import VaccinationsPage from '@/pages/vaccinations/VaccinationsPage';
 import GrowthTrackingPage from '@/pages/growth-tracking/GrowthTrackingPage';
 import CertificatesPage from '@/pages/certificates/CertificatesPage';
 import ParentProfile from '@/pages/parents/ParentProfile';
+import ParentDashboardLayout from '@/components/layout/ParentDashboardLayout';
 const AppRouter: React.FC = () => {
   const { user } = useAuth();
   const defaultDashboard =

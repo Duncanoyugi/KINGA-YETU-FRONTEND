@@ -95,10 +95,13 @@ export interface ParentDashboard {
     id: string;
     fullName: string;
     email: string;
+    emergencyContact?: string;
+    emergencyPhone?: string;
   };
   children: {
     id: string;
     firstName: string;
+    middleName?: string;
     lastName: string;
     dateOfBirth: string;
     gender: string;
