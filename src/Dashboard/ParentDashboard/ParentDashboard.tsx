@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useParentDashboard } from '@/features/parents/parentsHooks';
 import { useNotifications } from '@/features/notifications/notificationsHooks';
+import { useGetFacilitiesQuery } from '@/features/facilities/facilitiesHooks';
 import { Button } from '@/components/common/Button';
 import { formatDate, formatAge } from '@/utils/dateHelpers';
 
@@ -37,6 +38,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
   const parentId = user?.parentProfile?.id || '';
   const { dashboard, isLoading: dashboardLoading } = useParentDashboard(parentId);
   const { unreadCount } = useNotifications(user?.id);
+  const { data: facilities, isLoading: facilitiesLoading } = useGetFacilitiesQuery({ status: 'ACTIVE' });
 
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
 
@@ -292,7 +294,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <MapPinIcon className="h-5 w-5 text-gray-600" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Health Facility</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {facilitiesLoading ? 'Loading...' : facilities && facilities.length > 0 ? facilities[0].name : 'No Facility Assigned'}
+                    </p>
+                    {facilities && facilities.length > 0 && (
+                      <p className="text-xs text-gray-500">{facilities[0].phone || 'No phone'}</p>
+                    )}
                   </div>
                 </div>
               </div>

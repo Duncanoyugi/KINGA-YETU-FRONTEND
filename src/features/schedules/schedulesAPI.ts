@@ -95,6 +95,19 @@ export const schedulesAPI = createApi({
       }),
       invalidatesTags: ['Schedules'],
     }),
+    
+    // Get child-specific statistics
+    getChildScheduleStats: builder.query<{
+      total: number;
+      completed: number;
+      pending: number;
+      overdue: number;
+      upcoming: number;
+      completionRate: number;
+    }, string>({
+      query: (childId) => `/schedules/child/${childId}/stats`,
+      providesTags: ['Schedules'],
+    }),
   }),
 });
 
@@ -108,4 +121,5 @@ export const {
   useDeleteScheduleMutation,
   useCompleteScheduleMutation,
   useRescheduleMutation,
+  useGetChildScheduleStatsQuery,
 } = schedulesAPI;

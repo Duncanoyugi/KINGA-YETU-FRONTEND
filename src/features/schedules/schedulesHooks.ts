@@ -1,18 +1,8 @@
 // Custom hooks for schedules feature
-import {
-  useGetSchedulesQuery,
-  useGetScheduleByIdQuery,
-  useGetSchedulesByChildIdQuery,
-  useGetUpcomingSchedulesQuery,
-  useCreateScheduleMutation,
-  useUpdateScheduleMutation,
-  useDeleteScheduleMutation,
-  useCompleteScheduleMutation,
-  useRescheduleMutation,
-} from './schedulesAPI';
+import { schedulesAPI } from './schedulesAPI';
 import type { ScheduleFilter } from './schedulesTypes';
 
-export {
+export const {
   useGetSchedulesQuery,
   useGetScheduleByIdQuery,
   useGetSchedulesByChildIdQuery,
@@ -22,7 +12,8 @@ export {
   useDeleteScheduleMutation,
   useCompleteScheduleMutation,
   useRescheduleMutation,
-};
+  useGetChildScheduleStatsQuery,
+} = schedulesAPI;
 
 // Helper hook to get pending schedules
 export const usePendingSchedules = (childId?: string) => {
