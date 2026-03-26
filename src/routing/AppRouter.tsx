@@ -39,7 +39,7 @@ import { VaccineSchedule } from '../pages/vaccines/VaccineSchedule';
 import VaccinationsPage from '@/pages/vaccinations/VaccinationsPage';
 import GrowthTrackingPage from '@/pages/growth-tracking/GrowthTrackingPage';
 import CertificatesPage from '@/pages/certificates/CertificatesPage';
-import ParentDashboardLayout from '@/components/layout/ParentDashboardLayout';
+import ParentProfile from '@/pages/parents/ParentProfile';
 const AppRouter: React.FC = () => {
   const { user } = useAuth();
   const defaultDashboard =
@@ -75,6 +75,7 @@ const AppRouter: React.FC = () => {
           <Route element={<ParentDashboardLayout />}>
             <Route path="/dashboard/parent/children/add" element={<AddChild />} />
             <Route path={ROUTES.ADD_CHILD} element={<AddChild />} />
+            <Route path={ROUTES.PARENT_PROFILE} element={<ParentProfile />} />
           </Route>
           <Route path={ROUTES.CHILD_PROFILE} element={<ChildProfile />} />
           <Route path={ROUTES.EDIT_CHILD} element={<EditChild />} />

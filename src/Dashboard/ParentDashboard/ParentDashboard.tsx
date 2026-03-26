@@ -90,10 +90,19 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               <li>
                 <button
                   onClick={() => navigate('/dashboard/parent')}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-blue-50 text-blue-600"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
-                  <HomeIcon className="h-5 w-5 text-blue-600" />
+                  <HomeIcon className="h-5 w-5 text-gray-400" />
                   <span>Dashboard</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('/dashboard/parent/profile')}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <UserCircleIcon className="h-5 w-5 text-gray-400" />
+                  <span>My Profile</span>
                 </button>
               </li>
               <li>

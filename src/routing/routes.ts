@@ -16,6 +16,7 @@ export const ROUTES = {
 
   // Role-based Dashboards
   PARENT_DASHBOARD: '/dashboard/parent',
+  PARENT_PROFILE: '/dashboard/parent/profile',
   HEALTH_WORKER_DASHBOARD: '/dashboard/health-worker',
   ADMIN_DASHBOARD: '/dashboard/admin',
 
