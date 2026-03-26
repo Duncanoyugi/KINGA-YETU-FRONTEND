@@ -99,6 +99,14 @@ export const remindersAPI = createApi({
         method: 'POST',
       }),
     }),
+
+    // Reschedule a reminder
+    rescheduleReminder: builder.mutation<Reminder, { id: string; newDate: string }>({
+      query: ({ id, newDate }) => ({
+        url: `/${id}/reschedule?newDate=${encodeURIComponent(newDate)}`,
+        method: 'PATCH',
+      }),
+    }),
   }),
 });
 
@@ -113,4 +121,5 @@ export const {
   useUpdateReminderSettingsMutation,
   useSendReminderMutation,
   useCancelReminderMutation,
+  useRescheduleReminderMutation,
 } = remindersAPI;

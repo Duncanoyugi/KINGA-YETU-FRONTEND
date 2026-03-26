@@ -87,11 +87,11 @@ export const schedulesAPI = createApi({
     }),
     
     // Reschedule
-    reschedule: builder.mutation<Schedule, { id: string; newDate: string }>({
-      query: ({ id, newDate }) => ({
+    reschedule: builder.mutation<Schedule, { id: string; newDate: string; reason?: string }>({
+      query: ({ id, newDate, reason }) => ({
         url: `/schedules/${id}/reschedule`,
-        method: 'POST',
-        body: { scheduledDate: newDate },
+        method: 'PATCH',
+        body: { newDate, reason },
       }),
       invalidatesTags: ['Schedules'],
     }),

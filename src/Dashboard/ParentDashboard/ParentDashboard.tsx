@@ -12,13 +12,16 @@ import {
   PhoneIcon,
   MapPinIcon,
   UserCircleIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 import { useParentDashboard } from '@/features/parents/parentsHooks';
 import { useNotifications } from '@/features/notifications/notificationsHooks';
 import { useGetFacilitiesQuery } from '@/features/facilities/facilitiesHooks';
+import { useRescheduleReminderMutation } from '@/features/reminders/remindersHooks';
 import { Button } from '@/components/common/Button';
 import { formatDate, formatAge } from '@/utils/dateHelpers';
+import { RescheduleModal } from '@/features/schedules/components/RescheduleModal';
 
 interface ParentDashboardProps {
   isLayoutOnly?: boolean;
@@ -42,6 +45,21 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
   const { data: facilities, isLoading: facilitiesLoading } = useGetFacilitiesQuery({ status: 'ACTIVE' });
 
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
+  const [rescheduleModal, setRescheduleModal] = useState<{
+    isOpen: boolean;
+    scheduleId: string;
+    vaccineName: string;
+    childName: string;
+    currentDate: string;
+  }>({
+    isOpen: false,
+    scheduleId: '',
+    vaccineName: '',
+    childName: '',
+    currentDate: '',
+  });
+  
+  const [rescheduleReminder] = useRescheduleReminderMutation();
 
   useEffect(() => {
     if (dashboard?.children && dashboard.children.length > 0 && !selectedChild) {
@@ -404,10 +422,19 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
                         </p>
                       </div>
                       <button 
-                        onClick={() => {/* Handle mark as done */}}
-                        className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600"
+                        onClick={() => {
+                          setRescheduleModal({
+                            isOpen: true,
+                            scheduleId: reminder.id,
+                            vaccineName: reminder.vaccineName || 'Vaccination',
+                            childName: reminder.childName || '',
+                            currentDate: reminder.scheduledFor,
+                          });
+                        }}
+                        className="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 flex items-center gap-1"
                       >
-                        Done
+                        <ClockIcon className="w-3 h-3" />
+                        Reschedule
                       </button>
                     </div>
                   ))
@@ -486,6 +513,25 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
           </div>
         </main>
       )}
+      
+      {/* Reschedule Modal - placed outside conditional */}
+      {rescheduleModal.isOpen && (
+        <RescheduleModal
+          isOpen={rescheduleModal.isOpen}
+          onClose={() => setRescheduleModal({ ...rescheduleModal, isOpen: false })}
+          onSubmit={async (newDate, _reason) => {
+            await rescheduleReminder({
+              id: rescheduleModal.scheduleId,
+              newDate,
+            });
+          }}
+          scheduleId={rescheduleModal.scheduleId}
+          vaccineName={rescheduleModal.vaccineName}
+          childName={rescheduleModal.childName}
+          currentDate={rescheduleModal.currentDate}
+        />
+      )}
+      
       {isLayoutOnly && children}
     </div>
   );

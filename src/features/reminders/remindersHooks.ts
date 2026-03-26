@@ -1,5 +1,5 @@
 // Custom hooks for reminders feature
-import { useGetRemindersQuery, useGetReminderByIdQuery, useGetRemindersByChildQuery, useCreateReminderMutation, useUpdateReminderMutation, useDeleteReminderMutation, useGetReminderSettingsQuery, useUpdateReminderSettingsMutation, useSendReminderMutation, useCancelReminderMutation } from './remindersAPI';
+import { useGetRemindersQuery, useGetReminderByIdQuery, useGetRemindersByChildQuery, useCreateReminderMutation, useUpdateReminderMutation, useDeleteReminderMutation, useGetReminderSettingsQuery, useUpdateReminderSettingsMutation, useSendReminderMutation, useCancelReminderMutation, useRescheduleReminderMutation } from './remindersAPI';
 
 export {
   useGetRemindersQuery,
@@ -12,6 +12,7 @@ export {
   useUpdateReminderSettingsMutation,
   useSendReminderMutation,
   useCancelReminderMutation,
+  useRescheduleReminderMutation,
 };
 
 // Helper hook to get upcoming reminders
