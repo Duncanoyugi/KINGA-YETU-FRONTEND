@@ -17,6 +17,16 @@ export const ROUTES = {
   // Role-based Dashboards
   PARENT_DASHBOARD: '/dashboard/parent',
   PARENT_PROFILE: '/dashboard/parent/profile',
+  PARENT_CHILDREN: '/dashboard/parent/children',
+  PARENT_VACCINATIONS: '/dashboard/parent/vaccinations',
+  PARENT_APPOINTMENTS: '/dashboard/parent/appointments',
+  PARENT_GROWTH_TRACKING: '/dashboard/parent/growth-tracking',
+  PARENT_CERTIFICATES: '/dashboard/parent/certificates',
+  PARENT_ANALYTICS: '/dashboard/parent/analytics',
+  PARENT_REPORTS: '/dashboard/parent/reports',
+  PARENT_SETTINGS: '/dashboard/parent/settings',
+  PARENT_NOTIFICATIONS: '/dashboard/parent/notifications',
+  PARENT_REMINDERS: '/dashboard/parent/reminders',
   HEALTH_WORKER_DASHBOARD: '/dashboard/health-worker',
   ADMIN_DASHBOARD: '/dashboard/admin',
 

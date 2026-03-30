@@ -114,16 +114,19 @@ const AppRouter: React.FC = () => {
       {/* Role-based dashboards (no DashboardLayout) */}
       <Route element={<ProtectedRoute roles={['PARENT']} />}>
         <Route element={<ParentDashboardLayout />}>
-          <Route path={ROUTES.PARENT_DASHBOARD} element={<ParentDashboard />} />
-          <Route path="/dashboard/parent/children" element={<ChildrenList />} />
+          <Route path={ROUTES.PARENT_DASHBOARD} element={<ParentDashboard showSidebar={false} />} />
+          <Route path={ROUTES.PARENT_CHILDREN} element={<ChildrenList />} />
           <Route path={ROUTES.PARENT_ADD_CHILD} element={<AddChild />} />
           <Route path={ROUTES.PARENT_PROFILE} element={<ParentProfile />} />
-          <Route path="/dashboard/parent/vaccinations" element={<VaccinationsPage />} />
-          <Route path="/dashboard/parent/appointments" element={<Appointments />} />
-          <Route path="/dashboard/parent/growth-tracking" element={<GrowthTrackingPage />} />
-          <Route path="/dashboard/parent/certificates" element={<CertificatesPage />} />
-          <Route path="/dashboard/parent/notifications" element={<NotificationsCenter />} />
-          <Route path="/dashboard/parent/reminders" element={<ReminderSettings />} />
+          <Route path={ROUTES.PARENT_VACCINATIONS} element={<VaccinationsPage />} />
+          <Route path={ROUTES.PARENT_APPOINTMENTS} element={<Appointments />} />
+          <Route path={ROUTES.PARENT_GROWTH_TRACKING} element={<GrowthTrackingPage />} />
+          <Route path={ROUTES.PARENT_CERTIFICATES} element={<CertificatesPage />} />
+          <Route path={ROUTES.PARENT_ANALYTICS} element={<AnalyticsOverview />} />
+          <Route path={ROUTES.PARENT_REPORTS} element={<ReportsDashboard />} />
+          <Route path={ROUTES.PARENT_SETTINGS} element={<Settings />} />
+          <Route path={ROUTES.PARENT_NOTIFICATIONS} element={<NotificationsCenter />} />
+          <Route path={ROUTES.PARENT_REMINDERS} element={<ReminderSettings />} />
         </Route>
       </Route>
 

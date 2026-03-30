@@ -11,7 +11,7 @@ import { Card } from '@/components/common/Card';
 import { Alert } from '@/components/common/Alert';
 import { createChildSchema } from '@/lib/form-validation/validationSchemas';
 import type { CreateChildFormData } from '@/lib/form-validation/validationSchemas';
-// import { ROUTES } from '@/routing/routes';
+import { ROUTES } from '@/routing/routes';
 
 export const AddChild: React.FC = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export const AddChild: React.FC = () => {
           type: 'success',
           message: 'Child registered successfully',
         });
-        navigate('/dashboard/parent/children');
+        navigate(ROUTES.PARENT_CHILDREN);
       } catch (err: any) {
         setError(err.message || 'Failed to register child');
       }

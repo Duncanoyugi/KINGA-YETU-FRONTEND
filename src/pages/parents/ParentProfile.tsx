@@ -89,44 +89,8 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 fixed h-full overflow-y-auto">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-blue-600">ImmuniTrack</h1>
-          <p className="text-sm text-gray-500">Kenya</p>
-        </div>
-
-        <nav className="px-4">
-          {/* Main Menu */}
-          <div className="mb-8">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">MAIN MENU</p>
-            <ul className="space-y-1">
-              <li>
-                <button
-                  onClick={() => window.location.href = '/dashboard/parent'}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  <UserCircleIcon className="h-5 w-5 text-gray-400" />
-                  <span>Dashboard</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => window.location.href = '/dashboard/parent/profile'}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-blue-50 text-blue-600"
-                >
-                  <UserCircleIcon className="h-5 w-5 text-blue-600" />
-                  <span>My Profile</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
+    <div className="min-h-screen bg-gray-50">
+      <main className="p-8">
         <div className="max-w-3xl mx-auto">
           {/* Page Header */}
           <div className="flex justify-between items-center mb-8">

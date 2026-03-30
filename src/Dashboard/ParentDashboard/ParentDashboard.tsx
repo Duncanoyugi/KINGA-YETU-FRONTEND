@@ -13,6 +13,7 @@ import {
   MapPinIcon,
   UserCircleIcon,
   ClockIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 import { useParentDashboard } from '@/features/parents/parentsHooks';
@@ -22,13 +23,15 @@ import { useRescheduleReminderMutation } from '@/features/reminders/remindersHoo
 import { Button } from '@/components/common/Button';
 import { formatDate, formatAge } from '@/utils/dateHelpers';
 import { RescheduleModal } from '@/features/schedules/components/RescheduleModal';
+import { ROUTES } from '@/routing/routes';
 
 interface ParentDashboardProps {
   isLayoutOnly?: boolean;
+  showSidebar?: boolean;
   children?: React.ReactNode;
 }
 
-export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly = false, children }) => {
+export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly = false, showSidebar = true, children }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -87,28 +90,31 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
 
   // Find the next appointment date from actual reminders
   const nextAppointment = upcomingReminders.length > 0 
-    ? upcomingReminders.reduce((earliest, current) => 
+    ? upcomingReminders.reduce((earliest, current) => (
         new Date(current.scheduledFor) < new Date(earliest.scheduledFor) ? current : earliest
-      )
+      ))
     : null;
+
+  const mainClass = showSidebar ? 'flex-1 ml-64 p-8' : 'flex-1 p-8';
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 fixed h-full overflow-y-auto">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-blue-600">ImmuniTrack</h1>
-          <p className="text-sm text-gray-500">Kenya</p>
-        </div>
+      {showSidebar && (
+        <aside className="w-64 bg-white border-r border-gray-200 fixed h-full overflow-y-auto">
+          <div className="p-6">
+            <h1 className="text-xl font-bold text-blue-600">ImmuniTrack</h1>
+            <p className="text-sm text-gray-500">Kenya</p>
+          </div>
 
-        <nav className="px-4">
+          <nav className="px-4">
           {/* Main Menu */}
           <div className="mb-8">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">MAIN MENU</p>
             <ul className="space-y-1">
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent')}
+                  onClick={() => navigate(ROUTES.PARENT_DASHBOARD)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <HomeIcon className="h-5 w-5 text-gray-400" />
@@ -117,7 +123,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/profile')}
+                  onClick={() => navigate(ROUTES.PARENT_PROFILE)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <UserCircleIcon className="h-5 w-5 text-gray-400" />
@@ -126,7 +132,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/children')}
+                  onClick={() => navigate(ROUTES.PARENT_CHILDREN)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <UserGroupIcon className="h-5 w-5 text-gray-400" />
@@ -135,7 +141,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/vaccinations')}
+                  onClick={() => navigate(ROUTES.PARENT_VACCINATIONS)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <CheckCircleIcon className="h-5 w-5 text-gray-400" />
@@ -144,7 +150,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/appointments')}
+                  onClick={() => navigate(ROUTES.PARENT_APPOINTMENTS)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <CalendarIcon className="h-5 w-5 text-gray-400" />
@@ -153,7 +159,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/growth-tracking')}
+                  onClick={() => navigate(ROUTES.PARENT_GROWTH_TRACKING)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <ChartBarIcon className="h-5 w-5 text-gray-400" />
@@ -162,11 +168,20 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/certificates')}
+                  onClick={() => navigate(ROUTES.PARENT_CERTIFICATES)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <DocumentDuplicateIcon className="h-5 w-5 text-gray-400" />
                   <span>Certificates</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.PARENT_ANALYTICS)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <ChartBarIcon className="h-5 w-5 text-gray-400" />
+                  <span>Analytics</span>
                 </button>
               </li>
             </ul>
@@ -178,7 +193,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
             <ul className="space-y-1">
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/notifications')}
+                  onClick={() => navigate(ROUTES.PARENT_NOTIFICATIONS)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 relative"
                 >
                   <BellIcon className="h-5 w-5 text-gray-400" />
@@ -192,21 +207,40 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate('/dashboard/parent/reminders')}
+                  onClick={() => navigate(ROUTES.PARENT_REMINDERS)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   <BellIcon className="h-5 w-5 text-gray-400" />
                   <span className="text-sm">Reminders</span>
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.PARENT_REPORTS)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  <DocumentDuplicateIcon className="h-5 w-5 text-gray-400" />
+                  <span className="text-sm">Reports</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate(ROUTES.PARENT_SETTINGS)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  <Cog6ToothIcon className="h-5 w-5 text-gray-400" />
+                  <span className="text-sm">Settings</span>
+                </button>
+              </li>
             </ul>
           </div>
         </nav>
       </aside>
+      )}
 
       {/* Main Content */}
       {!isLayoutOnly && (
-        <main className="flex-1 ml-64 p-8">
+        <main className={mainClass}>
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
@@ -214,7 +248,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               <p className="text-gray-500">Here's your children's immunization overview</p>
             </div>
             <Button
-              onClick={() => navigate('/dashboard/parent/children/add')}
+              onClick={() => navigate(ROUTES.PARENT_ADD_CHILD)}
               leftIcon={<PlusIcon className="h-5 w-5" />}
               className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg"
             >
