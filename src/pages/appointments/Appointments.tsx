@@ -1,13 +1,19 @@
 import React from 'react';
 import { useGetChildrenByParentQuery } from '@/features/children/childrenAPI';
+import { useAuth } from '@/hooks/useAuth';
+import { useParentDashboard } from '@/features/parents/parentsHooks';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Spinner } from '@/components/common/Spinner';
 import { formatDate } from '@/utils/dateHelpers';
 
 const Appointments: React.FC = () => {
-  // Use getChildrenByParent which returns children WITH schedules
-  const { data: children, isLoading: childrenLoading } = useGetChildrenByParentQuery();
+  const { user } = useAuth();
+  const parentId = user?.parentProfile?.id || '';
+  const { dashboard, isLoading: dashboardLoading } = useParentDashboard(parentId);
+  const { data: children, isLoading: childrenLoading, isError } = useGetChildrenByParentQuery();
+
+  const parentChildren = children?.length ? children : dashboard?.children || [];
 
   // Helper to get upcoming schedules (future dates with SCHEDULED status)
   const getUpcomingAppointments = (child: any) => {
@@ -39,7 +45,7 @@ const Appointments: React.FC = () => {
       .sort((a: any, b: any) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
   };
 
-  if (childrenLoading) {
+  if (childrenLoading || dashboardLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <Spinner size="lg" />
@@ -47,13 +53,15 @@ const Appointments: React.FC = () => {
     );
   }
 
-  if (!children || children.length === 0) {
+  if (!parentChildren || parentChildren.length === 0) {
     return (
       <div className="space-y-8">
         <h1 className="text-2xl font-bold mb-4">Appointments</h1>
         <p className="mb-6 text-gray-700">View upcoming and past vaccination appointments for your children.</p>
         <div className="text-center text-gray-500 py-8">
-          No children found. Please add a child to view appointments.
+          {isError
+            ? 'Unable to load your children at the moment. Please refresh or check your parent profile.'
+            : 'No children found. Please add a child to view appointments.'}
         </div>
       </div>
     );
@@ -64,7 +72,7 @@ const Appointments: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">Appointments</h1>
       <p className="mb-6 text-gray-700">View upcoming and past vaccination appointments for your children.</p>
 
-      {children.map((child) => {
+      {parentChildren.map((child) => {
         const upcomingAppointments = getUpcomingAppointments(child);
         const pastAppointments = getPastAppointments(child);
 

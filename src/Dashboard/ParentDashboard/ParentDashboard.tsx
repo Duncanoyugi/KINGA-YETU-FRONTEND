@@ -316,25 +316,25 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               <p className="text-sm text-gray-500 mb-4">Manage your child's health</p>
               
               <div className="grid grid-cols-4 gap-4">
-                <button className="text-center group" onClick={() => navigate('/appointments/new')}>
+                <button className="text-center group" onClick={() => navigate(ROUTES.PARENT_APPOINTMENTS)}>
                   <div className="h-12 w-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                     <CalendarIcon className="h-6 w-6" />
                   </div>
                   <span className="text-xs text-gray-600">Schedule</span>
                 </button>
-                <button className="text-center group" onClick={() => navigate('/growth-tracking/new')}>
+                <button className="text-center group" onClick={() => navigate(ROUTES.PARENT_GROWTH_TRACKING)}>
                   <div className="h-12 w-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                     <ChartBarIcon className="h-6 w-6" />
                   </div>
                   <span className="text-xs text-gray-600">Growth</span>
                 </button>
-                <button className="text-center group" onClick={() => navigate('/certificates')}>
+                <button className="text-center group" onClick={() => navigate(ROUTES.PARENT_CERTIFICATES)}>
                   <div className="h-12 w-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                     <DocumentDuplicateIcon className="h-6 w-6" />
                   </div>
                   <span className="text-xs text-gray-600">Certificates</span>
                 </button>
-                <button className="text-center group" onClick={() => navigate('/reminders')}>
+                <button className="text-center group" onClick={() => navigate(ROUTES.PARENT_REMINDERS)}>
                   <div className="h-12 w-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                     <BellIcon className="h-6 w-6" />
                   </div>

@@ -66,6 +66,15 @@ export const parentsAPI = createApi({
       ],
     }),
 
+    updateParentProfile: builder.mutation<Parent, UpdateParentRequest>({
+      query: (data) => ({
+        url: '/profile',
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['Parents'],
+    }),
+
     deleteParent: builder.mutation<void, string>({
       query: (id) => ({
         url: `/${id}`,
@@ -203,6 +212,7 @@ export const {
   useGetParentByUserIdQuery,
   useCreateParentMutation,
   useUpdateParentMutation,
+  useUpdateParentProfileMutation,
   useDeleteParentMutation,
 
   // Child linking

@@ -4,7 +4,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { useAuth } from '@/hooks/useAuth';
 import { useParentDashboard } from '@/features/parents/parentsHooks';
-import { useUpdateParentMutation } from '@/features/parents/parentsAPI';
+import { useUpdateParentProfileMutation } from '@/features/parents/parentsAPI';
 import { toast } from 'react-hot-toast';
 import { 
   UserCircleIcon,
@@ -21,7 +21,7 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
   const { user } = useAuth();
   const parentId = user?.parentProfile?.id || '';
   const { dashboard, isLoading: dashboardLoading, refetch } = useParentDashboard(parentId);
-  const [updateParentMutation] = useUpdateParentMutation();
+  const [updateParentProfileMutation] = useUpdateParentProfileMutation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -55,7 +55,7 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
 
     setIsSaving(true);
     try {
-      await updateParentMutation({ id: parentId, data: formData }).unwrap();
+      await updateParentProfileMutation(formData).unwrap();
       toast.success('Profile updated successfully');
       setIsEditing(false);
       // Refresh dashboard data
