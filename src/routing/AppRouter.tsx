@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './routes';
-import Dashboard from '../pages/Dashboard';
 import { ParentDashboard } from '@/Dashboard/ParentDashboard/ParentDashboard';
 import HealthWorkerDashboard from '@/Dashboard/HealthWorkerDashboard/HealthWorkerDashboard';
 import AdminDashboard from '@/Dashboard/AdminDashboard/AdminDashboard';
@@ -69,15 +68,8 @@ const AppRouter: React.FC = () => {
       {/* Authenticated area - generic dashboard uses RoleBasedLayout */}
       <Route element={<RoleBasedLayout />}>
         <Route element={<ProtectedRoute />}>
-          {/* Generic dashboard placeholder */}
-          <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-          {/* Other generic dashboard pages (children, appointments, etc.) go here */}
+          <Route path={ROUTES.DASHBOARD} element={<Navigate to={defaultDashboard} replace />} />
           <Route path={ROUTES.CHILDREN_LIST} element={<ChildrenList />} />
-          <Route element={<ParentDashboardLayout />}>
-            <Route path="/dashboard/parent/children/add" element={<AddChild />} />
-            <Route path={ROUTES.ADD_CHILD} element={<AddChild />} />
-            <Route path={ROUTES.PARENT_PROFILE} element={<ParentProfile />} />
-          </Route>
           <Route path={ROUTES.CHILD_PROFILE} element={<ChildProfile />} />
           <Route path={ROUTES.EDIT_CHILD} element={<EditChild />} />
           <Route path={ROUTES.CHILD_HISTORY} element={<ChildHistory />} />
@@ -124,6 +116,8 @@ const AppRouter: React.FC = () => {
         <Route element={<ParentDashboardLayout />}>
           <Route path={ROUTES.PARENT_DASHBOARD} element={<ParentDashboard />} />
           <Route path="/dashboard/parent/children" element={<ChildrenList />} />
+          <Route path={ROUTES.PARENT_ADD_CHILD} element={<AddChild />} />
+          <Route path={ROUTES.PARENT_PROFILE} element={<ParentProfile />} />
           <Route path="/dashboard/parent/vaccinations" element={<VaccinationsPage />} />
           <Route path="/dashboard/parent/appointments" element={<Appointments />} />
           <Route path="/dashboard/parent/growth-tracking" element={<GrowthTrackingPage />} />
