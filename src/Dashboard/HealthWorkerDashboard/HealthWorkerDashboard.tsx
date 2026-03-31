@@ -999,8 +999,8 @@ const HealthWorkerDashboard: React.FC = () => {
 
   // Transform API data to component format
   const appointments: Appointment[] = React.useMemo(() => {
-    if (!schedulesData) return [];
-    return schedulesData.map((schedule: any) => ({
+    if (!schedulesData?.data) return [];
+    return schedulesData.data.map((schedule: any) => ({
       id: schedule.id,
       childName: schedule.child?.firstName ? `${schedule.child.firstName} ${schedule.child.lastName || ''}` : 'Unknown',
       age: schedule.child?.dateOfBirth ? 
@@ -1016,16 +1016,16 @@ const HealthWorkerDashboard: React.FC = () => {
   }, [schedulesData]);
 
   const upcomingAppointments: Appointment[] = React.useMemo(() => {
-    if (!upcomingData) return [];
-    return upcomingData.map((schedule: any) => ({
-      id: schedule.id,
-      childName: schedule.child?.firstName ? `${schedule.child.firstName} ${schedule.child.lastName || ''}` : 'Unknown',
-      age: schedule.child?.dateOfBirth ? 
-        `${Math.floor((new Date().getTime() - new Date(schedule.child.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : 'Unknown',
-      vaccine: schedule.vaccine?.name || schedule.vaccineName || 'N/A',
-      time: new Date(schedule.scheduledDate).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' }),
+    if (!upcomingData?.vaccines) return [];
+    return upcomingData.vaccines.map((schedule: any) => ({
+      id: schedule.scheduleId,
+      childName: schedule.childName || 'Unknown',
+      age: schedule.childDateOfBirth ? 
+        `${Math.floor((new Date().getTime() - new Date(schedule.childDateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : 'Unknown',
+      vaccine: schedule.vaccineName || 'N/A',
+      time: new Date(schedule.dueDate).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' }),
       status: 'scheduled' as AppointmentStatus,
-      parentName: schedule.child?.parent?.firstName ? `${schedule.child.parent.firstName} ${schedule.child.parent.lastName || ''}` : undefined,
+      parentName: schedule.parentName,
     }));
   }, [upcomingData]);
 
@@ -1078,12 +1078,12 @@ const HealthWorkerDashboard: React.FC = () => {
 
   // Calculate queue summary from schedules
   const queueSummary: QueueSummary = React.useMemo(() => {
-    if (!schedulesData) return { checkedIn: 0, waiting: 0, completed: 0, noShows: 0 };
+    const scheduleItems = (schedulesData?.data || []) as any[];
     return {
-      checkedIn: schedulesData.filter((s: any) => s.status === 'CHECKED_IN').length,
-      waiting: schedulesData.filter((s: any) => s.status === 'IN_PROGRESS').length,
-      completed: schedulesData.filter((s: any) => s.status === 'COMPLETED').length,
-      noShows: schedulesData.filter((s: any) => s.status === 'NO_SHOW' || s.status === 'CANCELLED').length,
+      checkedIn: scheduleItems.filter((s) => s.status === 'CHECKED_IN').length,
+      waiting: scheduleItems.filter((s) => s.status === 'IN_PROGRESS').length,
+      completed: scheduleItems.filter((s) => s.status === 'COMPLETED').length,
+      noShows: scheduleItems.filter((s) => s.status === 'NO_SHOW' || s.status === 'CANCELLED').length,
     };
   }, [schedulesData]);
 

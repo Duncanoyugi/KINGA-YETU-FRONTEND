@@ -1,6 +1,6 @@
 // RTK Query API for schedules
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { Schedule, CreateScheduleRequest, UpdateScheduleRequest, ScheduleFilter, UpcomingSchedule } from './schedulesTypes';
+import type { Schedule, CreateScheduleRequest, UpdateScheduleRequest, ScheduleFilter, PaginatedSchedulesResponse, UpcomingVaccinesResponse } from './schedulesTypes';
 import { API_URL } from '@/config/environment';
 
 export const schedulesAPI = createApi({
@@ -19,7 +19,7 @@ export const schedulesAPI = createApi({
   tagTypes: ['Schedules'],
   endpoints: (builder) => ({
     // Get all schedules with optional filters
-    getSchedules: builder.query<Schedule[], ScheduleFilter | undefined>({
+    getSchedules: builder.query<PaginatedSchedulesResponse, ScheduleFilter | undefined>({
       query: (filter) => {
         if (!filter) {
           return { url: '/' };
@@ -42,8 +42,8 @@ export const schedulesAPI = createApi({
     }),
     
     // Get upcoming schedules
-    getUpcomingSchedules: builder.query<UpcomingSchedule[], number>({
-      query: (days = 7) => `/upcoming?days=${days}`,
+    getUpcomingSchedules: builder.query<UpcomingVaccinesResponse, number>({
+      query: (days = 7) => `/upcoming?daysAhead=${days}`,
       providesTags: ['Schedules'],
     }),
     

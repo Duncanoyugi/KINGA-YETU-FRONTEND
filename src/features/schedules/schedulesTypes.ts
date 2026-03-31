@@ -39,6 +39,37 @@ export interface ScheduleFilter {
   facilityId?: string;
 }
 
+export interface UpcomingVaccine {
+  scheduleId: string;
+  vaccineCode: string;
+  vaccineName: string;
+  dueDate: string;
+  daysUntilDue: number;
+  childName: string;
+  childId: string;
+  childDateOfBirth: string;
+  recommendedAge: string;
+  parentName: string;
+  parentEmail: string;
+  parentPhone?: string;
+}
+
+export interface UpcomingVaccinesResponse {
+  total: number;
+  thisWeek: number;
+  nextWeek: number;
+  thisMonth: number;
+  vaccines: UpcomingVaccine[];
+}
+
+export interface PaginatedSchedulesResponse {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  data: Schedule[];
+}
+
 export interface UpcomingSchedule {
   schedule: Schedule;
   childName: string;

@@ -21,7 +21,7 @@ export const usePendingSchedules = (childId?: string) => {
   if (childId) filter.childId = childId;
   
   const { data: schedules, isLoading, error, refetch } = useGetSchedulesQuery(filter);
-  return { schedules: schedules || [], isLoading, error, refetch };
+  return { schedules: schedules?.data || [], isLoading, error, refetch };
 };
 
 // Helper hook to get completed schedules
@@ -30,5 +30,5 @@ export const useCompletedSchedules = (childId?: string) => {
   if (childId) filter.childId = childId;
   
   const { data: schedules, isLoading, error } = useGetSchedulesQuery(filter);
-  return { schedules: schedules || [], isLoading, error };
+  return { schedules: schedules?.data || [], isLoading, error };
 };
