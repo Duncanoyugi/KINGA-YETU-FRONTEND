@@ -1111,13 +1111,21 @@ const HealthWorkerDashboard: React.FC = () => {
   const [showFacilityModal, setShowFacilityModal] = useState(false);
   
   React.useEffect(() => {
-    if (user && user.role === 'HEALTH_WORKER' && !user.healthWorker?.facility) {
+    if (!user || user.role !== 'HEALTH_WORKER') {
+      setShowFacilityModal(false);
+      return;
+    }
+
+    if (!user.healthWorker?.facility) {
       setShowFacilityModal(true);
+    } else {
+      setShowFacilityModal(false);
     }
   }, [user]);
 
   const handleFacilitySuccess = async () => {
     await refetchUser();
+    setShowFacilityModal(false);
   };
 
 

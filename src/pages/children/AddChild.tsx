@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useChildren } from '@/features/children/childrenHooks';
+import { useGetParentsQuery } from '@/features/parents/parentsAPI';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -15,9 +17,18 @@ import { ROUTES } from '@/routing/routes';
 
 export const AddChild: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isHealthWorker = user?.role === 'HEALTH_WORKER';
   const { createChild, isLoading } = useChildren();
   const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [parentSearchTerm, setParentSearchTerm] = useState('');
+  const [selectedParent, setSelectedParent] = useState<any | null>(null);
+
+  const { data: parentSearchData, refetch: refetchParents, isFetching: parentSearchLoading } = useGetParentsQuery(
+    { search: parentSearchTerm, page: 1, limit: 5 },
+    { skip: !isHealthWorker || !parentSearchTerm }
+  );
 
   const {
     register,
@@ -33,14 +44,24 @@ export const AddChild: React.FC = () => {
     const onSubmit = async (data: CreateChildFormData) => {
       console.log('AddChild form submitted:', data);
       try {
-        await createChild(data);
+        const payload = {
+          ...data,
+          parentId: isHealthWorker ? selectedParent?.id : undefined,
+        };
+
+        if (isHealthWorker && !payload.parentId) {
+          setError('Please select a parent before registering a child.');
+          return;
+        }
+
+        await createChild(payload);
         showToast({
           type: 'success',
           message: 'Child registered successfully',
         });
         navigate(ROUTES.PARENT_CHILDREN);
       } catch (err: any) {
-        setError(err.message || 'Failed to register child');
+        setError(err.data?.message || err.message || 'Failed to register child');
       }
     };
 
@@ -68,6 +89,85 @@ export const AddChild: React.FC = () => {
                   onClose={() => setError(null)}
                   className="mb-6"
                 />
+              )}
+              {isHealthWorker && (
+                <div className="space-y-4 bg-blue-50 rounded-lg p-6 border border-blue-200 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-semibold text-blue-800">Assign Parent</h3>
+                      <p className="text-sm text-blue-600">
+                        Search for an existing parent by name, email, or phone number before registering a child.
+                      </p>
+                    </div>
+                    <span className="text-sm font-medium text-blue-700">Health worker flow</span>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Input
+                      label="Parent search term"
+                      value={parentSearchTerm}
+                      onChange={(e) => {
+                        setParentSearchTerm(e.target.value);
+                        setSelectedParent(null);
+                      }}
+                      placeholder="Enter parent name, email, or phone"
+                    />
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        fullWidth
+                        onClick={() => {
+                          if (!parentSearchTerm.trim()) {
+                            setError('Enter a parent search term first');
+                            return;
+                          }
+                          refetchParents();
+                        }}
+                        loading={parentSearchLoading}
+                      >
+                        Search Parent
+                      </Button>
+                    </div>
+                  </div>
+
+                  {selectedParent ? (
+                    <div className="rounded-lg bg-white p-4 border border-blue-200">
+                      <p className="text-sm text-blue-700 font-semibold">Selected Parent:</p>
+                      <p className="text-sm">{selectedParent.user?.fullName || selectedParent.fullName}</p>
+                      <p className="text-sm text-gray-600">{selectedParent.user?.email || selectedParent.email}</p>
+                      <p className="text-sm text-gray-600">{selectedParent.user?.phoneNumber || selectedParent.phoneNumber}</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-3"
+                        onClick={() => setSelectedParent(null)}
+                      >
+                        Clear selection
+                      </Button>
+                    </div>
+                  ) : parentSearchData?.data?.length ? (
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-blue-800">Select a parent</p>
+                      <div className="grid gap-3">
+                        {parentSearchData.data.map((parent) => (
+                          <button
+                            key={parent.id}
+                            type="button"
+                            onClick={() => setSelectedParent(parent)}
+                            className="rounded-lg border border-blue-200 p-4 text-left hover:border-blue-400 hover:bg-blue-50"
+                          >
+                            <p className="text-sm font-semibold text-blue-900">{parent.user?.fullName}</p>
+                            <p className="text-sm text-gray-600">{parent.user?.email}</p>
+                            <p className="text-sm text-gray-600">{parent.user?.phoneNumber}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : parentSearchTerm.trim() && !parentSearchLoading ? (
+                    <p className="text-sm text-gray-600">No parent found for that search term.</p>
+                  ) : null}
+                </div>
               )}
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

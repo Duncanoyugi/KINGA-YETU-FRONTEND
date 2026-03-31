@@ -22,35 +22,35 @@ export const schedulesAPI = createApi({
     getSchedules: builder.query<Schedule[], ScheduleFilter | undefined>({
       query: (filter) => {
         if (!filter) {
-          return { url: '/schedules' };
+          return { url: '/' };
         }
-        return { url: '/schedules', params: filter };
+        return { url: '/', params: filter };
       },
       providesTags: ['Schedules'],
     }),
     
     // Get schedule by ID
     getScheduleById: builder.query<Schedule, string>({
-      query: (id) => `/schedules/${id}`,
+      query: (id) => `/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Schedules', id }],
     }),
     
     // Get schedules by child ID
     getSchedulesByChildId: builder.query<Schedule[], string>({
-      query: (childId) => `/schedules/child/${childId}`,
+      query: (childId) => `/child/${childId}`,
       providesTags: ['Schedules'],
     }),
     
     // Get upcoming schedules
     getUpcomingSchedules: builder.query<UpcomingSchedule[], number>({
-      query: (days = 7) => `/schedules/upcoming?days=${days}`,
+      query: (days = 7) => `/upcoming?days=${days}`,
       providesTags: ['Schedules'],
     }),
     
     // Create new schedule
     createSchedule: builder.mutation<Schedule, CreateScheduleRequest>({
       query: (body) => ({
-        url: '/schedules',
+        url: '/',
         method: 'POST',
         body,
       }),
@@ -60,7 +60,7 @@ export const schedulesAPI = createApi({
     // Update schedule
     updateSchedule: builder.mutation<Schedule, { id: string; data: UpdateScheduleRequest }>({
       query: ({ id, data }) => ({
-        url: `/schedules/${id}`,
+        url: `/${id}`,
         method: 'PATCH',
         body: data,
       }),
@@ -70,7 +70,7 @@ export const schedulesAPI = createApi({
     // Delete schedule
     deleteSchedule: builder.mutation<void, string>({
       query: (id) => ({
-        url: `/schedules/${id}`,
+        url: `/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Schedules'],
@@ -79,7 +79,7 @@ export const schedulesAPI = createApi({
     // Mark schedule as completed
     completeSchedule: builder.mutation<Schedule, { id: string; administeredBy: string; facilityId?: string }>({
       query: ({ id, ...body }) => ({
-        url: `/schedules/${id}/complete`,
+        url: `/${id}/complete`,
         method: 'POST',
         body,
       }),
@@ -89,7 +89,7 @@ export const schedulesAPI = createApi({
     // Reschedule
     reschedule: builder.mutation<Schedule, { id: string; newDate: string; reason?: string }>({
       query: ({ id, newDate, reason }) => ({
-        url: `/schedules/${id}/reschedule`,
+        url: `/${id}/reschedule`,
         method: 'PATCH',
         body: { newDate, reason },
       }),
