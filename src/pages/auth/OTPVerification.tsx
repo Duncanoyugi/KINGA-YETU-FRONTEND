@@ -25,7 +25,8 @@ export const OTPVerification: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const email = location.state?.email || '';
+  const pendingEmail = localStorage.getItem('pendingVerificationEmail');
+  const email = location.state?.email || pendingEmail || '';
   const phone = location.state?.phone || '';
 
   useEffect(() => {
@@ -109,6 +110,7 @@ export const OTPVerification: React.FC = () => {
         phone, 
         type: 'EMAIL_VERIFICATION' 
       });
+      localStorage.removeItem('pendingVerificationEmail');
       
       // Show success message before redirect - redirect to login with success message
       setTimeout(() => {

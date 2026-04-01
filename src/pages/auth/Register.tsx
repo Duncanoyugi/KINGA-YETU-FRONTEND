@@ -74,7 +74,6 @@ export const Register: React.FC = () => {
       };
 
       await registerUser(registrationData);
-      navigate(ROUTES.VERIFY_EMAIL, { state: { email: data.email } });
     } catch (error) {
       // Error is handled by the hook
     }

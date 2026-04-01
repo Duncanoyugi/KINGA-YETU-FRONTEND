@@ -7,6 +7,7 @@ import AdminDashboard from '@/Dashboard/AdminDashboard/AdminDashboard';
 import { useAuth } from '@/hooks/useAuth';
 import LandingPage from '@/pages/landing/LandingPage';
 import Register from '../pages/auth/Register';
+import OTPVerification from '../pages/auth/OTPVerification';
 import ForgottenPassword from '../pages/auth/ForgottenPassword';
 import ResetPassword from '../pages/auth/ResetPassword';
 import ResourcesPage from '../pages/Resources';
@@ -58,6 +59,7 @@ const AppRouter: React.FC = () => {
       {/* Auth */}
       <Route path={ROUTES.LOGIN} element={<Login />} />
       <Route path={ROUTES.REGISTER} element={<Register />} />
+      <Route path={ROUTES.VERIFY_EMAIL} element={<OTPVerification />} />
       <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgottenPassword />} />
       <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
       <Route path={ROUTES.RESOURCES} element={<ResourcesPage />} />
