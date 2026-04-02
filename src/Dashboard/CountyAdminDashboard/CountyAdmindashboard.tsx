@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -281,6 +282,7 @@ interface Appointment {
 
 // Main Component
 export default function CountyDashboard() {
+  const { logout } = useAuth();
   const [timeRange, setTimeRange] = useState<string>("month");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<string>("subcounties");
@@ -526,7 +528,10 @@ export default function CountyDashboard() {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Account</p>
             </div>
 
-            <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+            <button 
+              onClick={() => logout()}
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            >
               <LogOut className="h-5 w-5" />
               <span className="font-medium">Log Out</span>
             </button>

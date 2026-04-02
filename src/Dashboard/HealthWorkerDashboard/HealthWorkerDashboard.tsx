@@ -231,7 +231,8 @@ const Sidebar: React.FC<{
   onViewChange: (view: ViewMode) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-}> = ({ activeView, onViewChange, isCollapsed, onToggleCollapse }) => {
+  onLogout: () => void;
+}> = ({ activeView, onViewChange, isCollapsed, onToggleCollapse, onLogout }) => {
   const navItems = [
     { id: 'dashboard' as ViewMode, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'appointments' as ViewMode, label: 'Appointments', icon: CalendarCheck },
@@ -330,7 +331,7 @@ const Sidebar: React.FC<{
                 </p>
               </div>
             </div>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors" onClick={() => navigate('/login')}>
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors" onClick={() => onLogout()}>
               <LogOut className="h-4 w-4" />
               <span>Log Out</span>
             </button>
@@ -340,7 +341,7 @@ const Sidebar: React.FC<{
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold">
               {user?.fullName ? user.fullName.split(' ').map((n: string) => n[0]).join('') : 'HW'}
             </div>
-            <button className="p-2 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors" onClick={() => navigate('/login')}>
+            <button className="p-2 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 rounded-lg transition-colors" onClick={() => onLogout()}>
               <LogOut className="h-5 w-5" />
             </button>
           </div>
@@ -945,7 +946,7 @@ const HealthWorkerDashboard: React.FC = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Get current user from auth
-  const { user, refetchUser } = useAuth();
+  const { user, refetchUser, logout: handleLogout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -1171,6 +1172,7 @@ const HealthWorkerDashboard: React.FC = () => {
         onViewChange={setActiveView}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onLogout={handleLogout}
       />
 
       {/* Mobile Menu Button */}

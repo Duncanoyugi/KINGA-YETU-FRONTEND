@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   HomeIcon,
   UserGroupIcon,
   CheckCircleIcon,
@@ -13,7 +13,7 @@ import {
   MapPinIcon,
   UserCircleIcon,
   ClockIcon,
-  Cog6ToothIcon,
+  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 import { useParentDashboard } from '@/features/parents/parentsHooks';
@@ -33,7 +33,7 @@ interface ParentDashboardProps {
 
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly = false, showSidebar = true, children }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   
   // DEBUG: Log user object to understand what's happening
   console.log('[ParentDashboard] User:', user);
@@ -225,11 +225,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ isLayoutOnly =
               </li>
               <li>
                 <button
-                  onClick={() => navigate(ROUTES.PARENT_SETTINGS)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                  onClick={() => logout()}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50"
                 >
-                  <Cog6ToothIcon className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">Settings</span>
+                  <ArrowTopRightOnSquareIcon className="h-5 w-5 text-red-500" />
+                  <span className="text-sm">Logout</span>
                 </button>
               </li>
             </ul>

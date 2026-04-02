@@ -152,7 +152,7 @@ export const useAuth = () => {
       dispatch(logout());
       setStoredToken(null);
       setStoredUser(null);
-      navigate(ROUTES.LOGIN);
+      navigate(ROUTES.HOME);
       dispatch(setLoading(false));
     }
   }, [dispatch, logoutMutation, navigate, showToast, setStoredToken, setStoredUser]);

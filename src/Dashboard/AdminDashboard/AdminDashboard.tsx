@@ -8,12 +8,14 @@ import {
   DocumentChartBarIcon,
   ShieldCheckIcon,
   ChartBarIcon,
+  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { StatsCard } from '@/components/widgets/StatsCard';
 import { Spinner } from '@/components/common/Spinner';
 import ROUTES from '@/routing/routes';
+import { useAuth } from '@/hooks/useAuth';
 
 // Types
 interface Facility {
@@ -337,6 +339,7 @@ const formatPercentage = (num: number): string => {
 // Main Dashboard Content
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isFetching, setIsFetching] = useState(true);
 
   // Real-time data stores
@@ -433,6 +436,16 @@ export const AdminDashboard: React.FC = () => {
               </span>
             </div>
           )}
+          
+          {/* Logout Button */}
+          <button
+            onClick={() => logout()}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            title="Logout"
+          >
+            <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+            <span>Logout</span>
+          </button>
         </div>
 
         {/* Stats Cards - Real-time data */}
