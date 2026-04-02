@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildImmunizations } from '@/features/children/childrenHooks';
+import { useRecordImmunizationMutation } from '@/features/children/childrenAPI';
 import { useGetScheduleByIdQuery } from '@/features/schedules/schedulesAPI';
 import { Spinner } from '@/components/common/Spinner';
 import { formatDate } from '@/utils/dateHelpers';
@@ -15,7 +15,7 @@ const RecordVaccinationPage: React.FC = () => {
     skip: !appointmentId,
   });
   const childId = scheduleData?.childId ?? '';
-  const { recordImmunization } = useChildImmunizations(childId);
+  const [recordImmunization] = useRecordImmunizationMutation();
 
   const [dateAdministered, setDateAdministered] = useState(() => new Date().toISOString().slice(0, 10));
   const [batchNumber, setBatchNumber] = useState('');
@@ -59,20 +59,28 @@ const RecordVaccinationPage: React.FC = () => {
       return;
     }
 
+    if (!childId) {
+      toast.error('Unable to identify child for this appointment.');
+      return;
+    }
+
     const ageAtDays = calculateAgeInDays(childDateOfBirth, dateAdministered);
 
     setSubmitting(true);
 
     try {
       await recordImmunization({
-        vaccineId: schedule.vaccineId,
-        dateAdministered: new Date(dateAdministered).toISOString(),
-        facilityId,
-        healthWorkerId,
-        ageAtDays,
-        batchNumber: batchNumber.trim() || undefined,
-        notes: notes.trim() || undefined,
-      });
+        childId,
+        data: {
+          vaccineId: schedule.vaccineId,
+          dateAdministered: new Date(dateAdministered).toISOString(),
+          facilityId,
+          healthWorkerId,
+          ageAtDays,
+          batchNumber: batchNumber.trim() || undefined,
+          notes: notes.trim() || undefined,
+        },
+      }).unwrap();
 
       toast.success('Vaccination recorded successfully.');
       navigate('/dashboard/health-worker/vaccinations');

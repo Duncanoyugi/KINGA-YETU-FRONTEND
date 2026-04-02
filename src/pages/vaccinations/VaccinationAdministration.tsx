@@ -58,7 +58,7 @@ const VaccinationAdministrationPage: React.FC = () => {
                       Due in {schedule.daysUntilDue >= 0 ? `${schedule.daysUntilDue} day${schedule.daysUntilDue === 1 ? '' : 's'}` : `${Math.abs(schedule.daysUntilDue)} day${schedule.daysUntilDue === -1 ? '' : 's'} overdue`}
                     </span>
                     <button
-                      onClick={() => navigate(`/dashboard/health-worker/vaccinations/record/${schedule.scheduleId}`)}
+                      onClick={() => navigate(`record/${schedule.scheduleId}`)}
                       className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       Record vaccination

@@ -305,8 +305,10 @@ export const useChildImmunizations = (childId: string) => {
   // Use RTK Query hooks to provide loading state and fresh data
   const { data: immunizationsData, isLoading: immunizationsLoading } = useGetImmunizationsQuery(childId, { skip: !childId });
   const { data: schedulesData, isLoading: schedulesLoading } = useGetVaccinationScheduleQuery(childId, { skip: !childId });
-  const immunizations = immunizationsData ?? useAppSelector((state) => state.children.immunizations);
-  const schedules = schedulesData ?? useAppSelector((state) => state.children.schedules);
+  const immunizationsFromStore = useAppSelector((state) => state.children.immunizations);
+  const schedulesFromStore = useAppSelector((state) => state.children.schedules);
+  const immunizations = immunizationsData ?? immunizationsFromStore;
+  const schedules = schedulesData ?? schedulesFromStore;
   const [recordImmunizationMutation] = useRecordImmunizationMutation();
   const [generateScheduleMutation] = useGenerateScheduleMutation();
 
