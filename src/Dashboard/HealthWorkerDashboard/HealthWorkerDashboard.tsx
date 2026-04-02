@@ -1253,8 +1253,20 @@ const HealthWorkerDashboard: React.FC = () => {
 
           {/* Health worker sub-pages (keep shell) */}
           <Route path="appointments" element={<Appointments />} />
-          <Route path="vaccinations" element={<VaccinationAdministrationPage />} />
-          <Route path="vaccinations/record/:appointmentId" element={<RecordVaccinationPage />} />
+          <Route path="vaccinations/*" element={
+            user?.healthWorker?.facility ? (
+              <Routes>
+                <Route path="/" element={<VaccinationAdministrationPage />} />
+                <Route path="record/:appointmentId" element={<RecordVaccinationPage />} />
+              </Routes>
+            ) : (
+              <FacilitySetupModal 
+                isOpen={true} 
+                onClose={() => navigate(HEALTH_WORKER_BASE_PATH)} 
+                onSuccess={() => refetchUser()} 
+              />
+            )
+          } />
           <Route path="children" element={<ChildrenList />} />
           <Route path="inventory" element={<VaccineInventory />} />
           <Route path="reports" element={<ReportsDashboard />} />

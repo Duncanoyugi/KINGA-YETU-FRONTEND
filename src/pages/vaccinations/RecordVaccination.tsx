@@ -30,9 +30,17 @@ const RecordVaccinationPage: React.FC = () => {
   }, [schedule]);
   const dueDate = schedule?.dueDate ? formatDate(schedule.dueDate) : 'N/A';
   const statusText = schedule?.status ? schedule.status.toLowerCase() : 'unknown';
-  const facilityName = schedule?.facility?.name || (user as any)?.healthWorker?.facility?.name || schedule?.facilityId || 'Unknown Facility';
-
-  const facilityId = schedule?.facilityId || (user as any)?.healthWorker?.facility?.id || '';
+  
+  // Use health worker's facility for administration, fall back to schedule's facility
+  const healthWorkerFacilityId = (user as any)?.healthWorker?.facility?.id || '';
+  const healthWorkerFacilityName = (user as any)?.healthWorker?.facility?.name || '';
+  const scheduleFacilityName = schedule?.facility?.name || '';
+  
+  // Primary facility: health worker's current facility. Secondary: child's birth facility
+  const facilityName = healthWorkerFacilityName || scheduleFacilityName || 'Unknown Facility';
+  
+  // Use health worker's facility for submission (they're administering at their workplace)
+  const facilityId = healthWorkerFacilityId || '';
   const healthWorkerId = (user as any)?.healthWorker?.id || user?.id || '';
 
   const calculateAgeInDays = (dateOfBirth: string, administeredDate: string) => {
