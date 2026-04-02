@@ -20,7 +20,7 @@ import { API_URL } from '@/config/environment';
 export const childrenAPI = createApi({
   reducerPath: 'childrenAPI',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_URL}/children`,
+    baseUrl: API_URL,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
       if (token) {
@@ -34,19 +34,19 @@ export const childrenAPI = createApi({
     // Child CRUD operations
     getChildren: builder.query<{ data: Child[]; pagination: any }, ChildSearchParams>({
       query: (params) => ({
-        url: '/',
+        url: '/children',
         params,
       }),
       providesTags: ['Children'],
     }),
 
     getChildById: builder.query<ChildResponse, string>({
-      query: (id) => `/${id}`,
+      query: (id) => `/children/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Child', id }],
     }),
 
     getChildrenByParent: builder.query<Child[], void>({
-      query: () => '/my-children',
+      query: () => '/children/my-children',
       providesTags: ['Children'],
     }),
 
@@ -54,7 +54,7 @@ export const childrenAPI = createApi({
       query: (childData) => {
         console.log('[childrenAPI] createChild called with data:', childData);
         return {
-          url: '/',
+          url: '/children',
           method: 'POST',
           body: childData,
         };
@@ -64,7 +64,7 @@ export const childrenAPI = createApi({
 
     updateChild: builder.mutation<Child, { id: string; data: UpdateChildRequest }>({
       query: ({ id, data }) => ({
-        url: `/${id}`,
+        url: `/children/${id}`,
         method: 'PATCH',
         body: data,
       }),
@@ -76,7 +76,7 @@ export const childrenAPI = createApi({
 
     deleteChild: builder.mutation<void, string>({
       query: (id) => ({
-        url: `/${id}`,
+        url: `/children/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Children'],
@@ -84,13 +84,13 @@ export const childrenAPI = createApi({
 
     // Growth records
     getGrowthRecords: builder.query<GrowthRecord[], string>({
-      query: (childId) => `/${childId}/growth`,
+      query: (childId) => `/children/${childId}/growth`,
       providesTags: (_result, _error, childId) => [{ type: 'Growth', id: childId }],
     }),
 
     addGrowthRecord: builder.mutation<GrowthRecord, { childId: string; data: RecordGrowthRequest }>({
       query: ({ childId, data }) => ({
-        url: `/${childId}/growth`,
+        url: `/children/${childId}/growth`,
         method: 'POST',
         body: data,
       }),
@@ -116,13 +116,13 @@ export const childrenAPI = createApi({
 
     // Development records
     getDevelopmentRecords: builder.query<DevelopmentRecord[], string>({
-      query: (childId) => `/${childId}/development`,
+      query: (childId) => `/children/${childId}/development`,
       providesTags: (_result, _error, childId) => [{ type: 'Development', id: childId }],
     }),
 
     addDevelopmentRecord: builder.mutation<DevelopmentRecord, { childId: string; data: RecordDevelopmentRequest }>({
       query: ({ childId, data }) => ({
-        url: `/${childId}/development`,
+        url: `/children/${childId}/development`,
         method: 'POST',
         body: data,
       }),
@@ -148,13 +148,13 @@ export const childrenAPI = createApi({
 
     // Immunizations
     getImmunizations: builder.query<Immunization[], string>({
-      query: (childId) => `${API_URL}/immunizations/child/${childId}`,
+      query: (childId) => `/immunizations/child/${childId}`,
       providesTags: (_result, _error, childId) => [{ type: 'Immunizations', id: childId }],
     }),
 
     recordImmunization: builder.mutation<Immunization, { childId: string; data: ImmunizationRecord }>({
       query: ({ childId, data }) => ({
-        url: `${API_URL}/immunizations`,
+        url: '/immunizations',
         method: 'POST',
         body: { childId, ...data },
       }),
@@ -166,7 +166,7 @@ export const childrenAPI = createApi({
 
     updateImmunization: builder.mutation<Immunization, { id: string; data: Partial<ImmunizationRecord> }>({
       query: ({ id, data }) => ({
-        url: `${API_URL}/immunizations/${id}`,
+        url: `/immunizations/${id}`,
         method: 'PATCH',
         body: data,
       }),
@@ -175,13 +175,13 @@ export const childrenAPI = createApi({
 
     // Vaccination schedules
     getVaccinationSchedule: builder.query<VaccinationSchedule[], string>({
-      query: (childId) => `${API_URL}/schedules/child/${childId}`,
+      query: (childId) => `/schedules/child/${childId}`,
       providesTags: (_result, _error, childId) => [{ type: 'Schedules', id: childId }],
     }),
 
     generateSchedule: builder.mutation<any, { childId: string; dateOfBirth: string; includeCatchup?: boolean; generateReminders?: boolean; reminderDaysBefore?: number }>({
       query: (payload) => ({
-        url: `${API_URL}/schedules/generate`,
+        url: '/schedules/generate',
         method: 'POST',
         body: payload,
       }),
