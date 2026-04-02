@@ -34,6 +34,13 @@ const RecordVaccinationPage: React.FC = () => {
   const facilityId = (user as any)?.healthWorker?.facility?.id || '';
   const healthWorkerId = (user as any)?.healthWorker?.id || user?.id || '';
 
+  const calculateAgeInDays = (dateOfBirth: string, administeredDate: string) => {
+    const dob = new Date(dateOfBirth);
+    const administered = new Date(administeredDate);
+    const diffMs = administered.getTime() - dob.getTime();
+    return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!schedule || !appointmentId) {
@@ -46,6 +53,14 @@ const RecordVaccinationPage: React.FC = () => {
       return;
     }
 
+    const childDateOfBirth = schedule?.child?.dateOfBirth;
+    if (!childDateOfBirth) {
+      toast.error('Child date of birth is required to record immunization.');
+      return;
+    }
+
+    const ageAtDays = calculateAgeInDays(childDateOfBirth, dateAdministered);
+
     setSubmitting(true);
 
     try {
@@ -54,6 +69,7 @@ const RecordVaccinationPage: React.FC = () => {
         dateAdministered: new Date(dateAdministered).toISOString(),
         facilityId,
         healthWorkerId,
+        ageAtDays,
         batchNumber: batchNumber.trim() || undefined,
         notes: notes.trim() || undefined,
       });

@@ -148,15 +148,15 @@ export const childrenAPI = createApi({
 
     // Immunizations
     getImmunizations: builder.query<Immunization[], string>({
-      query: (childId) => `/${childId}/immunizations`,
+      query: (childId) => `/immunizations/child/${childId}`,
       providesTags: (_result, _error, childId) => [{ type: 'Immunizations', id: childId }],
     }),
 
     recordImmunization: builder.mutation<Immunization, { childId: string; data: ImmunizationRecord }>({
       query: ({ childId, data }) => ({
-        url: `/${childId}/immunizations`,
+        url: '/immunizations',
         method: 'POST',
-        body: data,
+        body: { childId, ...data },
       }),
       invalidatesTags: (_result, _error, { childId }) => [
         { type: 'Immunizations', id: childId },
@@ -175,16 +175,17 @@ export const childrenAPI = createApi({
 
     // Vaccination schedules
     getVaccinationSchedule: builder.query<VaccinationSchedule[], string>({
-      query: (childId) => `/${childId}/schedule`,
+      query: (childId) => `/schedules/child/${childId}`,
       providesTags: (_result, _error, childId) => [{ type: 'Schedules', id: childId }],
     }),
 
-    generateSchedule: builder.mutation<VaccinationSchedule[], string>({
-      query: (childId) => ({
-        url: `/${childId}/schedule/generate`,
+    generateSchedule: builder.mutation<any, { childId: string; dateOfBirth: string; includeCatchup?: boolean; generateReminders?: boolean; reminderDaysBefore?: number }>({
+      query: (payload) => ({
+        url: '/schedules/generate',
         method: 'POST',
+        body: payload,
       }),
-      invalidatesTags: (_result, _error, childId) => [{ type: 'Schedules', id: childId }],
+      invalidatesTags: (_result, _error, payload) => [{ type: 'Schedules', id: payload.childId }],
     }),
 
     updateScheduleStatus: builder.mutation<VaccinationSchedule, { id: string; status: string }>({

@@ -322,9 +322,20 @@ export const useChildImmunizations = (childId: string) => {
     }
   }, [dispatch, childId, recordImmunizationMutation]);
 
-  const generateSchedule = useCallback(async () => {
+  const generateSchedule = useCallback(async (
+    dateOfBirth: string,
+    includeCatchup: boolean = true,
+    generateReminders: boolean = true,
+    reminderDaysBefore: number = 7,
+  ) => {
     try {
-      const newSchedule = await generateScheduleMutation(childId).unwrap();
+      const newSchedule = await generateScheduleMutation({
+        childId,
+        dateOfBirth,
+        includeCatchup,
+        generateReminders,
+        reminderDaysBefore,
+      }).unwrap();
       dispatch(setSchedules(newSchedule));
       toast.success('Vaccination schedule generated');
       return newSchedule;

@@ -198,6 +198,7 @@ export interface ImmunizationRecord {
   dateAdministered: string;
   facilityId: string;
   healthWorkerId: string;
+  ageAtDays?: number;
   batchNumber?: string;
   expirationDate?: string;
   notes?: string;
