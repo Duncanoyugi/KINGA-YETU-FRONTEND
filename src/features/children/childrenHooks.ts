@@ -343,14 +343,14 @@ export const useChildImmunizations = (childId: string) => {
   const getUpcomingVaccinations = useCallback(() => {
     const now = new Date();
     return schedules
-      .filter((s: VaccinationSchedule) => s.status === 'SCHEDULED' && new Date(s.dueDate) > now)
+      .filter((s: VaccinationSchedule) => ['SCHEDULED', 'PENDING'].includes(s.status) && new Date(s.dueDate) > now)
       .sort((a: VaccinationSchedule, b: VaccinationSchedule) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
   }, [schedules]);
 
   const getOverdueVaccinations = useCallback(() => {
     const now = new Date();
     return schedules
-      .filter((s: VaccinationSchedule) => s.status === 'SCHEDULED' && new Date(s.dueDate) < now)
+      .filter((s: VaccinationSchedule) => ['SCHEDULED', 'PENDING'].includes(s.status) && new Date(s.dueDate) < now)
       .sort((a: VaccinationSchedule, b: VaccinationSchedule) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
   }, [schedules]);
 
