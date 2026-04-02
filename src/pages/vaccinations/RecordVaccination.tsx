@@ -30,8 +30,9 @@ const RecordVaccinationPage: React.FC = () => {
   }, [schedule]);
   const dueDate = schedule?.dueDate ? formatDate(schedule.dueDate) : 'N/A';
   const statusText = schedule?.status ? schedule.status.toLowerCase() : 'unknown';
+  const facilityName = schedule?.facility?.name || (user as any)?.healthWorker?.facility?.name || schedule?.facilityId || 'Unknown Facility';
 
-  const facilityId = (user as any)?.healthWorker?.facility?.id || '';
+  const facilityId = schedule?.facilityId || (user as any)?.healthWorker?.facility?.id || '';
   const healthWorkerId = (user as any)?.healthWorker?.id || user?.id || '';
 
   const calculateAgeInDays = (dateOfBirth: string, administeredDate: string) => {
@@ -61,6 +62,11 @@ const RecordVaccinationPage: React.FC = () => {
 
     if (!childId) {
       toast.error('Unable to identify child for this appointment.');
+      return;
+    }
+
+    if (!facilityId) {
+      toast.error('Facility information is required to record this vaccination.');
       return;
     }
 
@@ -135,6 +141,7 @@ const RecordVaccinationPage: React.FC = () => {
                   <p className="text-xs uppercase tracking-wide text-gray-500">Appointment</p>
                   <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">{dueDate}</p>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Status: {statusText}</p>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Facility: {facilityName}</p>
                 </div>
               </div>
 
