@@ -59,6 +59,8 @@ import ChildrenList from '@/pages/children/ChildrenList';
 import Appointments from '@/pages/appointments/Appointments';
 import ReportsDashboard from '@/pages/reports/ReportsDashboard';
 import VaccineInventory from '@/pages/vaccines/VaccineInventory';
+import VaccinationAdministrationPage from '@/pages/vaccinations/VaccinationAdministration';
+import RecordVaccinationPage from '@/pages/vaccinations/RecordVaccination';
 import SettingsPage from '@/pages/settings/Settings';
 
 // Loading spinner component
@@ -77,7 +79,7 @@ const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }
 type AppointmentStatus = 'checked-in' | 'waiting' | 'scheduled' | 'completed' | 'no-show';
 type StockStatus = 'ok' | 'low' | 'critical';
 type AlertType = 'critical' | 'warning' | 'info' | 'success';
-type ViewMode = 'dashboard' | 'appointments' | 'children' | 'inventory' | 'reports' | 'settings';
+type ViewMode = 'dashboard' | 'appointments' | 'children' | 'inventory' | 'reports' | 'settings' | 'vaccinations';
 
 const HEALTH_WORKER_BASE_PATH = '/dashboard/health-worker';
 const HEALTH_WORKER_ROUTE_MAP: Record<ViewMode, string> = {
@@ -87,6 +89,7 @@ const HEALTH_WORKER_ROUTE_MAP: Record<ViewMode, string> = {
   inventory: `${HEALTH_WORKER_BASE_PATH}/inventory`,
   reports: `${HEALTH_WORKER_BASE_PATH}/reports`,
   settings: `${HEALTH_WORKER_BASE_PATH}/settings`,
+  vaccinations: `${HEALTH_WORKER_BASE_PATH}/vaccinations`,
 };
 
 interface Appointment {
@@ -232,6 +235,7 @@ const Sidebar: React.FC<{
   const navItems = [
     { id: 'dashboard' as ViewMode, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'appointments' as ViewMode, label: 'Appointments', icon: CalendarCheck },
+    { id: 'vaccinations' as ViewMode, label: 'Vaccinations', icon: Syringe },
     { id: 'children' as ViewMode, label: 'Children', icon: Users },
     { id: 'inventory' as ViewMode, label: 'Inventory', icon: Package },
     { id: 'reports' as ViewMode, label: 'Reports', icon: BarChart3 },
@@ -949,6 +953,7 @@ const HealthWorkerDashboard: React.FC = () => {
     const path = location.pathname;
     const nextView: ViewMode =
       path.startsWith(HEALTH_WORKER_ROUTE_MAP.appointments) ? 'appointments' :
+      path.startsWith(HEALTH_WORKER_ROUTE_MAP.vaccinations) ? 'vaccinations' :
       path.startsWith(HEALTH_WORKER_ROUTE_MAP.children) ? 'children' :
       path.startsWith(HEALTH_WORKER_ROUTE_MAP.inventory) ? 'inventory' :
       path.startsWith(HEALTH_WORKER_ROUTE_MAP.reports) ? 'reports' :
@@ -1128,11 +1133,6 @@ const HealthWorkerDashboard: React.FC = () => {
     setShowFacilityModal(false);
   };
 
-
-  const handleRecordClick = (appointmentId: string) => {
-    console.log('Record vaccination for appointment:', appointmentId);
-  };
-
   const handleViewChild = (childId: string) => {
     console.log('View child profile:', childId);
   };
@@ -1145,6 +1145,10 @@ const HealthWorkerDashboard: React.FC = () => {
   const handleRegisterClick = () => {
     // Keep the health worker shell while registering a child
     navigate(HEALTH_WORKER_ROUTE_MAP.children);
+  };
+
+  const handleRecordClick = (appointmentId: string) => {
+    navigate(`${HEALTH_WORKER_ROUTE_MAP.vaccinations}/record/${appointmentId}`);
   };
 
   // Show loading state
@@ -1246,11 +1250,13 @@ const HealthWorkerDashboard: React.FC = () => {
           />
 
           {/* Health worker sub-pages (keep shell) */}
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/children" element={<ChildrenList />} />
-          <Route path="/inventory" element={<VaccineInventory />} />
-          <Route path="/reports" element={<ReportsDashboard />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="appointments" element={<Appointments />} />
+          <Route path="vaccinations" element={<VaccinationAdministrationPage />} />
+          <Route path="vaccinations/record/:appointmentId" element={<RecordVaccinationPage />} />
+          <Route path="children" element={<ChildrenList />} />
+          <Route path="inventory" element={<VaccineInventory />} />
+          <Route path="reports" element={<ReportsDashboard />} />
+          <Route path="settings" element={<SettingsPage />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to={HEALTH_WORKER_BASE_PATH} replace />} />
