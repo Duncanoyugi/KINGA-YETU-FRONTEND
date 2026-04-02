@@ -4,6 +4,7 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Alert } from '@/components/common/Alert';
 import { useAuth } from '@/hooks/useAuth';
+import { authAPI } from '@/features/auth/authAPI';
 import { ROUTES } from '@/routing/routes';
 import { 
   Smartphone, 
@@ -17,7 +18,8 @@ import {
 export const OTPVerification: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { verifyOTP, requestOTP, isLoading } = useAuth();
+  const { requestOTP, isLoading } = useAuth();
+  const [verifyEmailMutation] = authAPI.useVerifyEmailMutation();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -104,12 +106,10 @@ export const OTPVerification: React.FC = () => {
 
     try {
       setSuccess(true);
-      await verifyOTP({ 
-        code: verificationCode, 
-        email, 
-        phone, 
-        type: 'EMAIL_VERIFICATION' 
-      });
+      await verifyEmailMutation({
+        email,
+        otpCode: verificationCode,
+      }).unwrap();
       localStorage.removeItem('pendingVerificationEmail');
       
       // Show success message before redirect - redirect to login with success message
@@ -118,7 +118,7 @@ export const OTPVerification: React.FC = () => {
       }, 1500);
     } catch (error: any) {
       setSuccess(false);
-      setError(error.message || 'Invalid verification code');
+      setError(error.data?.message || error.message || 'Invalid verification code');
       // Clear OTP fields on error
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
