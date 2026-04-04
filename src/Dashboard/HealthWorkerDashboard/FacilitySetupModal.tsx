@@ -13,7 +13,7 @@ import { Spinner } from '@/components/common/Spinner';
 interface FacilitySetupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (facility: any) => void;
 }
 
 
@@ -54,13 +54,13 @@ export const FacilitySetupModal: React.FC<FacilitySetupModalProps> = ({ isOpen, 
 
   const onSubmit = async (data: CreateFacilityRequest) => {
     try {
-      await createFacility(data).unwrap();
+      const createdFacility = await createFacility(data).unwrap();
       showToast({ type: 'success', message: 'Facility created successfully! Redirecting...' });
       
       // Refetch user to get updated healthWorker.facility
       await refetchUser();
       
-      onSuccess();
+      onSuccess(createdFacility);
       onClose();
     } catch (error: any) {
       showToast({ 

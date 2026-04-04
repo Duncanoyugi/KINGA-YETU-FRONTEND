@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { FacilitySetupModal } from './FacilitySetupModal';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { useAppDispatch } from '@/app/store/hooks';
+import { updateUser } from '@/features/auth/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import {
@@ -946,7 +948,8 @@ const HealthWorkerDashboard: React.FC = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Get current user from auth
-  const { user, refetchUser, logout: handleLogout } = useAuth();
+  const { user, refetchUser, logout: handleLogout, isLoading: authLoading } = useAuth();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -1122,14 +1125,28 @@ const HealthWorkerDashboard: React.FC = () => {
       return;
     }
 
+    if (authLoading) {
+      return;
+    }
+
     if (!user.healthWorker?.facility) {
       setShowFacilityModal(true);
     } else {
       setShowFacilityModal(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
-  const handleFacilitySuccess = async () => {
+  const handleFacilitySuccess = async (facility?: any) => {
+    if (facility && user) {
+      const updatedHealthWorker = user.healthWorker
+        ? ({ ...user.healthWorker, facility } as any)
+        : ({ facility } as any);
+
+      dispatch(updateUser({
+        healthWorker: updatedHealthWorker,
+      }));
+    }
+
     await refetchUser();
     setShowFacilityModal(false);
   };
