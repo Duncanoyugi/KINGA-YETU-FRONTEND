@@ -31,16 +31,15 @@ const RecordVaccinationPage: React.FC = () => {
   const dueDate = schedule?.dueDate ? formatDate(schedule.dueDate) : 'N/A';
   const statusText = schedule?.status ? schedule.status.toLowerCase() : 'unknown';
   
-  // Use health worker's facility for administration, fall back to schedule's facility
-  const healthWorkerFacilityId = (user as any)?.healthWorker?.facility?.id || '';
-  const healthWorkerFacilityName = (user as any)?.healthWorker?.facility?.name || '';
-  const scheduleFacilityName = schedule?.facility?.name || '';
+  // Get facility information - health worker's facility or schedule's facility
+  const healthWorkerFacilityId = (user as any)?.healthWorker?.facility?.id;
+  const healthWorkerFacilityName = (user as any)?.healthWorker?.facility?.name;
+  const scheduleFacilityId = schedule?.facilityId;
+  const scheduleFacilityName = schedule?.facility?.name;
   
-  // Primary facility: health worker's current facility. Secondary: child's birth facility
-  const facilityName = healthWorkerFacilityName || scheduleFacilityName || 'Unknown Facility';
-  
-  // Use health worker's facility for submission (they're administering at their workplace)
-  const facilityId = healthWorkerFacilityId || '';
+  // Use health worker's facility if available, otherwise use schedule's facility
+  const facilityId = healthWorkerFacilityId || scheduleFacilityId || '';
+  const facilityName = healthWorkerFacilityName || scheduleFacilityName || 'Facility Information Not Available';
   const healthWorkerId = (user as any)?.healthWorker?.id || user?.id || '';
 
   const calculateAgeInDays = (dateOfBirth: string, administeredDate: string) => {
@@ -74,7 +73,7 @@ const RecordVaccinationPage: React.FC = () => {
     }
 
     if (!facilityId) {
-      toast.error('Facility information is required to record this vaccination.');
+      toast.error('Facility information is missing. Please ensure your facility is properly configured or contact your administrator.');
       return;
     }
 

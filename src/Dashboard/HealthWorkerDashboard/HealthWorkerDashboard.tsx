@@ -1260,11 +1260,22 @@ const HealthWorkerDashboard: React.FC = () => {
                 <Route path="record/:appointmentId" element={<RecordVaccinationPage />} />
               </Routes>
             ) : (
-              <FacilitySetupModal 
-                isOpen={true} 
-                onClose={() => navigate(HEALTH_WORKER_BASE_PATH)} 
-                onSuccess={() => refetchUser()} 
-              />
+              <div className="flex flex-col items-center justify-center min-h-screen">
+                <div className="text-center space-y-4">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Please Complete Facility Setup
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    You need to set up your facility information before accessing vaccinations.
+                  </p>
+                  <button
+                    onClick={() => navigate(HEALTH_WORKER_BASE_PATH)}
+                    className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  >
+                    Go to Dashboard
+                  </button>
+                </div>
+              </div>
             )
           } />
           <Route path="children" element={<ChildrenList />} />
