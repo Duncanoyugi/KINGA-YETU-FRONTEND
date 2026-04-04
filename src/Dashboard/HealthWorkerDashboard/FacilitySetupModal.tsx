@@ -2,7 +2,6 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateFacilityMutation, type CreateFacilityRequest } from '@/features/facilities/facilitiesAPI';
-import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { createFacilitySchema } from '@/lib/form-validation/validationSchemas';
 import { Button } from '@/components/common/Button';
@@ -18,7 +17,6 @@ interface FacilitySetupModalProps {
 
 
 export const FacilitySetupModal: React.FC<FacilitySetupModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { refetchUser } = useAuth();
   const { showToast } = useToast();
   const [createFacility] = useCreateFacilityMutation();
 
@@ -56,10 +54,6 @@ export const FacilitySetupModal: React.FC<FacilitySetupModalProps> = ({ isOpen, 
     try {
       const createdFacility = await createFacility(data).unwrap();
       showToast({ type: 'success', message: 'Facility created successfully! Redirecting...' });
-      
-      // Refetch user to get updated healthWorker.facility
-      await refetchUser();
-      
       onSuccess(createdFacility);
       onClose();
     } catch (error: any) {

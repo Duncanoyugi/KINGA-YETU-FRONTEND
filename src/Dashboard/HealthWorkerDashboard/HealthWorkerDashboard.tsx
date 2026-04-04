@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { FacilitySetupModal } from './FacilitySetupModal';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@/app/store/hooks';
-import { updateUser } from '@/features/auth/authSlice';
+import { setCredentials, updateUser } from '@/features/auth/authSlice';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import {
@@ -948,7 +948,7 @@ const HealthWorkerDashboard: React.FC = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Get current user from auth
-  const { user, refetchUser, logout: handleLogout, isLoading: authLoading } = useAuth();
+  const { user, token, refetchUser, logout: handleLogout, isLoading: authLoading } = useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -1118,10 +1118,12 @@ const HealthWorkerDashboard: React.FC = () => {
   
   // Facility details modal state
   const [showFacilityModal, setShowFacilityModal] = useState(false);
+  const [facilitySetupCompleted, setFacilitySetupCompleted] = useState(false);
   
   React.useEffect(() => {
     if (!user || user.role !== 'HEALTH_WORKER') {
       setShowFacilityModal(false);
+      setFacilitySetupCompleted(false);
       return;
     }
 
@@ -1129,26 +1131,40 @@ const HealthWorkerDashboard: React.FC = () => {
       return;
     }
 
-    if (!user.healthWorker?.facility) {
+    if (!user.healthWorker?.facility && !facilitySetupCompleted) {
       setShowFacilityModal(true);
     } else {
       setShowFacilityModal(false);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, facilitySetupCompleted]);
 
   const handleFacilitySuccess = async (facility?: any) => {
-    if (facility && user) {
-      const updatedHealthWorker = user.healthWorker
-        ? ({ ...user.healthWorker, facility } as any)
-        : ({ facility } as any);
-
-      dispatch(updateUser({
-        healthWorker: updatedHealthWorker,
-      }));
+    if (!user) {
+      return;
     }
 
-    await refetchUser();
+    const updatedHealthWorker = user.healthWorker
+      ? ({ ...user.healthWorker, facility, facilityId: facility?.id } as any)
+      : ({ facility, facilityId: facility?.id } as any);
+
+    dispatch(updateUser({ healthWorker: updatedHealthWorker }));
+
+    if (token) {
+      try {
+        const response = await refetchUser();
+        console.log('[HealthWorkerDashboard] refetchUser result:', response);
+
+        if (response && 'data' in response && response.data) {
+          dispatch(setCredentials({ user: response.data, token }));
+        }
+      } catch (error) {
+        console.error('Failed to refetch user after facility setup:', error);
+      }
+    }
+
+    setFacilitySetupCompleted(true);
     setShowFacilityModal(false);
+    navigate(HEALTH_WORKER_BASE_PATH, { replace: true });
   };
 
   const handleViewChild = (childId: string) => {
