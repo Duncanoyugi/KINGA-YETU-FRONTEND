@@ -38,18 +38,20 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load parent data
+  // Load parent data - use user object from auth context which has the data
   useEffect(() => {
-    console.log('parentData:', parentData);
-    console.log('parentId:', parentId);
-    if (parentData) {
-      console.log('Setting form data from parentData:', {
-        emergencyContact: parentData.emergencyContact,
-        emergencyPhone: parentData.emergencyPhone,
-        county: parentData.county,
-        subCounty: parentData.subCounty,
-        address: parentData.address,
+    const userProfile = user?.profile;
+    console.log('user?.profile:', userProfile);
+    if (userProfile) {
+      setFormData({
+        emergencyContact: parentData?.emergencyContact || user?.parentProfile?.emergencyContact || '',
+        emergencyPhone: parentData?.emergencyPhone || user?.parentProfile?.emergencyPhone || '',
+        county: userProfile.county || '',
+        subCounty: userProfile.subCounty || '',
+        address: userProfile.address || '',
       });
+    } else if (parentData) {
+      // Fallback to parentData if user profile not available
       setFormData({
         emergencyContact: parentData.emergencyContact || '',
         emergencyPhone: parentData.emergencyPhone || '',
@@ -58,7 +60,7 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
         address: parentData.address || '',
       });
     }
-  }, [parentData]);
+  }, [parentData, user?.profile]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -87,20 +89,19 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
     }
   };
 
-  // Parent info from user object
+  // Parent info from user object - location comes from user.profile
   const parentInfo = {
     fullName: user?.fullName || '',
     email: user?.email || '',
     phoneNumber: user?.phoneNumber || '',
-    emergencyContact: formData.emergencyContact || parentData?.emergencyContact || '',
-    emergencyPhone: formData.emergencyPhone || parentData?.emergencyPhone || '',
-    county: formData.county || parentData?.county || '',
-    subCounty: formData.subCounty || parentData?.subCounty || '',
-    address: formData.address || parentData?.address || '',
+    emergencyContact: formData.emergencyContact || user?.parentProfile?.emergencyContact || parentData?.emergencyContact || '',
+    emergencyPhone: formData.emergencyPhone || user?.parentProfile?.emergencyPhone || parentData?.emergencyPhone || '',
+    county: formData.county || user?.profile?.county || parentData?.county || '',
+    subCounty: formData.subCounty || user?.profile?.subCounty || parentData?.subCounty || '',
+    address: formData.address || user?.profile?.address || parentData?.address || '',
   };
   
   console.log('parentInfo:', parentInfo);
-  console.log('formData:', formData);
 
   if (!isLayoutOnly && parentLoading) {
     return (
