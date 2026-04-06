@@ -58,7 +58,7 @@ import { useGetInventoryQuery, useGetStockAlertsQuery } from '@/features/vaccine
 import { useGetRealTimeStatsQuery, useGetDashboardMetricsQuery } from '@/features/analytics/analyticsAPI';
 
 import ChildrenList from '@/pages/children/ChildrenList';
-import Appointments from '@/pages/appointments/Appointments';
+
 import ReportsDashboard from '@/pages/reports/ReportsDashboard';
 import VaccineInventory from '@/pages/vaccines/VaccineInventory';
 import VaccinationAdministrationPage from '@/pages/vaccinations/VaccinationAdministration';
@@ -1055,7 +1055,7 @@ const HealthWorkerDashboard: React.FC = () => {
   // Fetch upcoming schedules
   const { data: upcomingData, isLoading: upcomingLoading } = useGetUpcomingSchedulesQuery(7);
 
-  // Fetch today's schedules
+  // Fetch today's schedules (don't filter by facility - backend doesn't support it)
   const { data: schedulesData, isLoading: schedulesLoading } = useGetSchedulesQuery({
     startDate: new Date().toISOString().split('T')[0],
   });
@@ -1373,7 +1373,7 @@ const HealthWorkerDashboard: React.FC = () => {
           />
 
           {/* Health worker sub-pages (keep shell) */}
-          <Route path="appointments" element={<Appointments />} />
+          <Route path="appointments" element={<Navigate to={HEALTH_WORKER_BASE_PATH} replace />} />
           <Route path="vaccinations/*" element={
             // Allow access if: has facility, has facilityId, or has completed setup before
             user?.healthWorker?.facility || user?.healthWorker?.facilityId || 
