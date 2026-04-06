@@ -1203,8 +1203,8 @@ const HealthWorkerDashboard: React.FC = () => {
       return;
     }
 
-    // Show modal if no facility assigned OR no healthWorker profile yet
-    if (!user.healthWorker?.facility && !user.healthWorker?.facilityId && !facilitySetupCompleted) {
+    // Show modal if: no healthWorker OR no facility OR hasn't completed setup
+    if (!user.healthWorker || !user.healthWorker?.facility || !user.healthWorker?.facilityId || !facilitySetupCompleted) {
       setShowFacilityModal(true);
     } else {
       setShowFacilityModal(false);
