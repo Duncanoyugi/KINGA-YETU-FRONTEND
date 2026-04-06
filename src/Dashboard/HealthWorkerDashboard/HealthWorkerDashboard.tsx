@@ -1179,8 +1179,12 @@ const HealthWorkerDashboard: React.FC = () => {
 // Get user info
   const facilityName = user?.healthWorker?.facility?.name || 'Your Facility';
   
+  // Check for setup=true in URL params
+  const searchParams = new URLSearchParams(window?.location?.search || '');
+  const wantsSetup = searchParams.get('setup') === 'true';
+  
   // Facility details modal state
-  const [showFacilityModal, setShowFacilityModal] = useState(false);
+  const [showFacilityModal, setShowFacilityModal] = useState(wantsSetup);
   const [facilitySetupCompleted, setFacilitySetupCompleted] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('facilitySetupCompleted') === 'true';
@@ -1403,6 +1407,26 @@ const HealthWorkerDashboard: React.FC = () => {
           <Route path="reports" element={<ReportsDashboard />} />
           <Route path="settings" element={<SettingsPage />} />
 
+          {/* Facility Setup - dedicated route */}
+          <Route path="setup" element={
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-6">
+              <div className="w-full max-w-2xl">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  Set Up Your Facility
+                </h1>
+                <FacilitySetupModal 
+                  isOpen={true}
+                  onClose={() => navigate(HEALTH_WORKER_BASE_PATH)}
+                  onSuccess={() => {
+                    setFacilitySetupCompleted(true);
+                    localStorage.setItem('facilitySetupCompleted', 'true');
+                    navigate(HEALTH_WORKER_BASE_PATH);
+                  }}
+                />
+              </div>
+            </div>
+          } />
+          
           {/* Fallback */}
           <Route path="*" element={<Navigate to={HEALTH_WORKER_BASE_PATH} replace />} />
         </Routes>

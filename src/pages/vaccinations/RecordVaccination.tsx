@@ -44,7 +44,7 @@ const RecordVaccinationPage: React.FC = () => {
   // If no facility available, force redirect to dashboard for setup
   if (!facilityId) {
     toast.error('Facility information is missing. Please set up your facility first.');
-    window.location.href = '/dashboard/health-worker?setup=true';
+    window.location.href = '/dashboard/health-worker/setup';
     return null;
   }
   
