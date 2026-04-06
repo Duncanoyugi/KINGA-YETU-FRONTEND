@@ -230,3 +230,17 @@ export interface AnalyticsState {
   error: string | null;
   lastUpdated: string | null;
 }
+
+export interface HealthWorkerDashboardStats {
+  facilityName: string;
+  totalChildren: number;
+  fullyImmunized: number;
+  coverageRate: number;
+  vaccinationsThisMonth: number;
+  missedAppointments: number;
+  upcomingVaccinations: number;
+  overdueVaccinations: number;
+  totalVaccineStock: number;
+  lowStockAlerts: number;
+  reportsGenerated: number;
+}

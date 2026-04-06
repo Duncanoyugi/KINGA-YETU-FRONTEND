@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useReports } from '@/features/reports/reportsHooks';
 import { useAuth } from '@/hooks/useAuth';
+import { useGetHealthWorkerDashboardStatsQuery } from '@/features/analytics/analyticsAPI';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -70,8 +71,14 @@ const reportTypes = [
 
 export const ReportsDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { isAdmin, isHealthWorker } = useAuth();
+  const { isAdmin, isHealthWorker, user } = useAuth();
   const { getRecentReports, isLoading } = useReports();
+  
+  const facilityId = user?.healthWorker?.facility?.id;
+  const { data: healthWorkerStats } = useGetHealthWorkerDashboardStatsQuery(
+    facilityId!,
+    { skip: !facilityId || !isHealthWorker }
+  );
   
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const recentReports = getRecentReports(5);
@@ -182,32 +189,61 @@ export const ReportsDashboard: React.FC = () => {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <Card.Body className="text-center">
-            <div className="text-2xl font-bold text-primary-600">85%</div>
-            <div className="text-sm text-gray-600">Overall Coverage</div>
-          </Card.Body>
-        </Card>
-        <Card>
-          <Card.Body className="text-center">
-            <div className="text-2xl font-bold text-green-600">1,234</div>
-            <div className="text-sm text-gray-600">Vaccinations This Month</div>
-          </Card.Body>
-        </Card>
-        <Card>
-          <Card.Body className="text-center">
-            <div className="text-2xl font-bold text-yellow-600">12</div>
-            <div className="text-sm text-gray-600">Missed Appointments</div>
-          </Card.Body>
-        </Card>
-        <Card>
-          <Card.Body className="text-center">
-            <div className="text-2xl font-bold text-purple-600">8</div>
-            <div className="text-sm text-gray-600">Reports Generated</div>
-          </Card.Body>
-        </Card>
-      </div>
+      {isHealthWorker && healthWorkerStats ? (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-primary-600">{healthWorkerStats.coverageRate}%</div>
+              <div className="text-sm text-gray-600">Overall Coverage</div>
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-green-600">{healthWorkerStats.vaccinationsThisMonth}</div>
+              <div className="text-sm text-gray-600">Vaccinations This Month</div>
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">{healthWorkerStats.missedAppointments}</div>
+              <div className="text-sm text-gray-600">Missed Appointments</div>
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{healthWorkerStats.reportsGenerated}</div>
+              <div className="text-sm text-gray-600">Reports Generated</div>
+            </Card.Body>
+          </Card>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-primary-600">-</div>
+              <div className="text-sm text-gray-600">Overall Coverage</div>
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-green-600">-</div>
+              <div className="text-sm text-gray-600">Vaccinations This Month</div>
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">-</div>
+              <div className="text-sm text-gray-600">Missed Appointments</div>
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Body className="text-center">
+              <div className="text-2xl font-bold text-purple-600">-</div>
+              <div className="text-sm text-gray-600">Reports Generated</div>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
 
       {/* Scheduled Reports */}
       {(isAdmin || isHealthWorker) && (

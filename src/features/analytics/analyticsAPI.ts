@@ -9,7 +9,8 @@ import type {
   DemographicsAnalytics,
   AnalyticsRequest,
   PredictionRequest,
-  AnalyticsResponse
+  AnalyticsResponse,
+  HealthWorkerDashboardStats
 } from './analyticsTypes';
 import type { RootState } from '@/app/store/store';
 import { API_URL } from '@/config/environment';
@@ -181,6 +182,12 @@ export const analyticsAPI = createApi({
       }),
       providesTags: ['Dashboard'],
     }),
+
+    // Health Worker Dashboard Stats
+    getHealthWorkerDashboardStats: builder.query<HealthWorkerDashboardStats, string>({
+      query: (facilityId) => `/health-worker-dashboard/${facilityId}`,
+      providesTags: ['Dashboard'],
+    }),
   }),
 });
 
@@ -204,6 +211,9 @@ export const {
   
   // County Admin Dashboard
   useGetCountyAdminDashboardQuery,
+  
+  // Health Worker Dashboard
+  useGetHealthWorkerDashboardStatsQuery,
   
   // Export
   useExportAnalyticsMutation,
