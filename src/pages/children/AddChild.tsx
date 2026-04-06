@@ -27,7 +27,55 @@ export const AddChild: React.FC = () => {
   const [selectedParent, setSelectedParent] = useState<any | null>(null);
 
   // Get user's county from user profile (not parentProfile)
-  const userCounty = user?.profile?.county || '';
+  // Normalize county name - convert 'tharakanithi' to 'Tharaka-Nithi' for matching
+  const rawCounty = user?.profile?.county || '';
+  const countyNormalizationMap: Record<string, string> = {
+    'tharakanithi': 'Tharaka-Nithi',
+    'tharaka nithi': 'Tharaka-Nithi',
+    'nairobi': 'Nairobi',
+    'mombasa': 'Mombasa',
+    'kisumu': 'Kisumu',
+    'nakuru': 'Nakuru',
+    'eldoret': 'Uasin Gishu',
+    'uasin gishu': 'Uasin Gishu',
+    'kakamega': 'Kakamega',
+    'bungoma': 'Bungoma',
+    'kisii': 'Kisii',
+    'nyamira': 'Nyamira',
+    'meru': 'Meru',
+    'isiolo': 'Isiolo',
+    'marsabit': 'Marsabit',
+    'garissa': 'Garissa',
+    'wajir': 'Wajir',
+    'mandera': 'Mandera',
+    'lamu': 'Lamu',
+    'tana river': 'Tana River',
+    'kilifi': 'Kilifi',
+    'kwale': 'Kwale',
+    'taita taveta': 'Taita Taveta',
+    'vihiga': 'Vihiga',
+    'baringo': 'Baringo',
+    'laikipia': 'Laikipia',
+    'nyeri': 'Nyeri',
+    'kirinyaga': 'Kirinyaga',
+    'muranga': 'Murang\'a',
+    'kiambu': 'Kiambu',
+    'turkana': 'Turkana',
+    'west pokot': 'West Pokot',
+    'samburu': 'Samburu',
+    'trans nzoia': 'Trans Nzoia',
+    'nandi': 'Nandi',
+    'elgeyo marakwet': 'Elgeyo Marakwet',
+    'bomet': 'Bomet',
+    'kericho': 'Kericho',
+    'siaya': 'Siaya',
+    'homa bay': 'Homa Bay',
+    'migori': 'Migori',
+    'kajiado': 'Kajiado',
+    'narok': 'Narok',
+    'busia': 'Busia',
+  };
+  const userCounty = countyNormalizationMap[rawCounty.toLowerCase()] || rawCounty;
   
   // Fetch facilities - filter by county if parent has one set
   console.log('AddChild - userCounty:', userCounty);
