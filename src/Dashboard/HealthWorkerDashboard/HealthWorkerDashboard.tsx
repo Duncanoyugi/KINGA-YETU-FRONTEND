@@ -1370,7 +1370,7 @@ const HealthWorkerDashboard: React.FC = () => {
           {/* Health worker sub-pages (keep shell) */}
           <Route path="appointments" element={<Appointments />} />
           <Route path="vaccinations/*" element={
-            user?.healthWorker?.facility ? (
+            user?.healthWorker?.facility || user?.healthWorker?.facilityId ? (
               <Routes>
                 <Route path="/" element={<VaccinationAdministrationPage />} />
                 <Route path="record/:appointmentId" element={<RecordVaccinationPage />} />
