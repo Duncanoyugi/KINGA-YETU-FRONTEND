@@ -105,6 +105,7 @@ export const createChildSchema = z.object({
     /^[A-Z0-9]{8,20}$/,
     'Birth certificate number must be 8-20 uppercase alphanumeric characters (no spaces/hyphens)'
   ).optional(),
+  birthFacilityId: z.string().optional(),
   birthFacilityName: z.string().optional(),
 
   birthWeight: z.number().positive(messages.positive).max(10, messages.maxValue(10)).optional(),

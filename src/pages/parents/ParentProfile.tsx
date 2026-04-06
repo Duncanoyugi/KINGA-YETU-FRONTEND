@@ -27,6 +27,9 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
   const [formData, setFormData] = useState({
     emergencyContact: '',
     emergencyPhone: '',
+    county: '',
+    subCounty: '',
+    address: '',
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -36,6 +39,9 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
       setFormData({
         emergencyContact: dashboard.parent.emergencyContact || '',
         emergencyPhone: dashboard.parent.emergencyPhone || '',
+        county: (dashboard.parent as any).county || '',
+        subCounty: (dashboard.parent as any).subCounty || '',
+        address: (dashboard.parent as any).address || '',
       });
     }
   }, [dashboard?.parent]);
@@ -75,6 +81,9 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
     phoneNumber: user?.phoneNumber || '',
     emergencyContact: formData.emergencyContact || dashboard?.parent?.emergencyContact || '',
     emergencyPhone: formData.emergencyPhone || dashboard?.parent?.emergencyPhone || '',
+    county: formData.county || (dashboard?.parent as any)?.county || '',
+    subCounty: formData.subCounty || (dashboard?.parent as any)?.subCounty || '',
+    address: formData.address || (dashboard?.parent as any)?.address || '',
   };
 
   if (!isLayoutOnly && dashboardLoading) {
@@ -162,11 +171,13 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
                     <Button
                       onClick={() => {
                         setIsEditing(false);
-                        // Reset form to original values
                         if (dashboard?.parent) {
                           setFormData({
                             emergencyContact: dashboard.parent.emergencyContact || '',
                             emergencyPhone: dashboard.parent.emergencyPhone || '',
+                            county: (dashboard.parent as any).county || '',
+                            subCounty: (dashboard.parent as any).subCounty || '',
+                            address: (dashboard.parent as any).address || '',
                           });
                         }
                       }}
@@ -193,6 +204,60 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">Contact Phone</label>
                     <p className="text-gray-900 font-medium">{parentInfo.emergencyPhone || 'Not set'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Location Card */}
+          <Card className="mb-6">
+            <div className="p-4 border-b border-gray-200 flex items-center gap-3">
+              <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold">Location</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {isEditing ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="County"
+                      value={formData.county}
+                      onChange={(e) => handleInputChange('county', e.target.value)}
+                      placeholder="e.g., Tharaka-Nithi"
+                    />
+                    <Input
+                      label="Sub-County"
+                      value={formData.subCounty}
+                      onChange={(e) => handleInputChange('subCounty', e.target.value)}
+                      placeholder="e.g., Chuka"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="Address"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      placeholder="Physical address"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">County</label>
+                    <p className="text-gray-900 font-medium">{formData.county || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Sub-County</label>
+                    <p className="text-gray-900 font-medium">{formData.subCounty || 'Not set'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
+                    <p className="text-gray-900 font-medium">{formData.address || 'Not set'}</p>
                   </div>
                 </div>
               )}

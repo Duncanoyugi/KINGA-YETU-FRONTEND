@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useChildren } from '@/features/children/childrenHooks';
 import { useGetParentsQuery } from '@/features/parents/parentsAPI';
+import { useGetFacilitiesQuery } from '@/features/facilities/facilitiesHooks';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/common/Button';
@@ -24,6 +25,15 @@ export const AddChild: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [parentSearchTerm, setParentSearchTerm] = useState('');
   const [selectedParent, setSelectedParent] = useState<any | null>(null);
+
+  // Get user's county from parent profile
+  const userCounty = (user?.parentProfile as any)?.county || '';
+  
+  // Fetch facilities - filter by county if parent has one set
+  const { data: facilities = [] } = useGetFacilitiesQuery(
+    { county: userCounty || undefined },
+    { skip: !userCounty }
+  );
 
   const { data: parentSearchData, refetch: refetchParents, isFetching: parentSearchLoading } = useGetParentsQuery(
     { search: parentSearchTerm, page: 1, limit: 5 },
@@ -245,12 +255,34 @@ export const AddChild: React.FC = () => {
                       error={errors.birthCertificateNo?.message}
                       placeholder="e.g., 12345678"
                     />
-                    <Input
-                      label="Birth Facility (Optional)"
-                      {...register('birthFacilityName')}
-                      error={errors.birthFacilityName?.message}
-                      placeholder="Enter facility name (e.g., Nairobi Hospital)"
-                    />
+                    {facilities.length > 0 ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Birth Facility
+                        </label>
+                        <select
+                          {...register('birthFacilityId')}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="">Select a facility</option>
+                          {facilities.map((facility: any) => (
+                            <option key={facility.id} value={facility.id}>
+                              {facility.name} ({facility.county})
+                            </option>
+                          ))}
+                        </select>
+                        {errors.birthFacilityId && (
+                          <p className="mt-1 text-sm text-red-600">{errors.birthFacilityId.message}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <Input
+                        label="Birth Facility (Optional)"
+                        {...register('birthFacilityName')}
+                        error={errors.birthFacilityName?.message}
+                        placeholder="Enter facility name (e.g., Nairobi Hospital)"
+                      />
+                    )}
                     <Input
                       label="Birth Weight (kg) - Optional"
                       type="number"
