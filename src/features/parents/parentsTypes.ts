@@ -11,6 +11,10 @@ export interface Parent {
   user?: User;
   children?: Child[];
   reminders?: Reminder[];
+  // Location fields from user profile
+  county?: string | null;
+  subCounty?: string | null;
+  address?: string | null;
 }
 
 // Child model (simplified)

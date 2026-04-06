@@ -3,8 +3,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { useAuth } from '@/hooks/useAuth';
-import { useParentDashboard } from '@/features/parents/parentsHooks';
-import { useUpdateParentProfileMutation } from '@/features/parents/parentsAPI';
+import { useGetParentByIdQuery, useUpdateParentProfileMutation } from '@/features/parents/parentsAPI';
 import { toast } from 'react-hot-toast';
 import { 
   UserCircleIcon,
@@ -20,7 +19,13 @@ interface ParentProfileProps {
 export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = false }) => {
   const { user } = useAuth();
   const parentId = user?.parentProfile?.id || '';
-  const { dashboard, isLoading: dashboardLoading, refetch } = useParentDashboard(parentId);
+  
+  // Use profile endpoint instead of dashboard (dashboard has issues)
+  const { data: parentData, isLoading: parentLoading, refetch } = useGetParentByIdQuery(
+    parentId,
+    { skip: !parentId }
+  );
+  
   const [updateParentProfileMutation] = useUpdateParentProfileMutation();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -33,18 +38,18 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load parent data from dashboard
+  // Load parent data
   useEffect(() => {
-    if (dashboard?.parent) {
+    if (parentData) {
       setFormData({
-        emergencyContact: dashboard.parent.emergencyContact || '',
-        emergencyPhone: dashboard.parent.emergencyPhone || '',
-        county: (dashboard.parent as any).county || '',
-        subCounty: (dashboard.parent as any).subCounty || '',
-        address: (dashboard.parent as any).address || '',
+        emergencyContact: parentData.emergencyContact || '',
+        emergencyPhone: parentData.emergencyPhone || '',
+        county: parentData.county || '',
+        subCounty: parentData.subCounty || '',
+        address: parentData.address || '',
       });
     }
-  }, [dashboard?.parent]);
+  }, [parentData]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -64,7 +69,6 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
       await updateParentProfileMutation(formData).unwrap();
       toast.success('Profile updated successfully');
       setIsEditing(false);
-      // Refresh dashboard data
       refetch();
     } catch (error: any) {
       console.error('Error updating parent:', error);
@@ -79,14 +83,14 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
     fullName: user?.fullName || '',
     email: user?.email || '',
     phoneNumber: user?.phoneNumber || '',
-    emergencyContact: formData.emergencyContact || dashboard?.parent?.emergencyContact || '',
-    emergencyPhone: formData.emergencyPhone || dashboard?.parent?.emergencyPhone || '',
-    county: formData.county || (dashboard?.parent as any)?.county || '',
-    subCounty: formData.subCounty || (dashboard?.parent as any)?.subCounty || '',
-    address: formData.address || (dashboard?.parent as any)?.address || '',
+    emergencyContact: formData.emergencyContact || parentData?.emergencyContact || '',
+    emergencyPhone: formData.emergencyPhone || parentData?.emergencyPhone || '',
+    county: formData.county || parentData?.county || '',
+    subCounty: formData.subCounty || parentData?.subCounty || '',
+    address: formData.address || parentData?.address || '',
   };
 
-  if (!isLayoutOnly && dashboardLoading) {
+  if (!isLayoutOnly && parentLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -171,13 +175,13 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
                     <Button
                       onClick={() => {
                         setIsEditing(false);
-                        if (dashboard?.parent) {
+                        if (parentData) {
                           setFormData({
-                            emergencyContact: dashboard.parent.emergencyContact || '',
-                            emergencyPhone: dashboard.parent.emergencyPhone || '',
-                            county: (dashboard.parent as any).county || '',
-                            subCounty: (dashboard.parent as any).subCounty || '',
-                            address: (dashboard.parent as any).address || '',
+                            emergencyContact: parentData.emergencyContact || '',
+                            emergencyPhone: parentData.emergencyPhone || '',
+                            county: parentData.county || '',
+                            subCounty: parentData.subCounty || '',
+                            address: parentData.address || '',
                           });
                         }
                       }}
@@ -270,9 +274,9 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
               <h3 className="text-lg font-semibold">My Children</h3>
             </div>
             <div className="p-6">
-              {dashboard?.children && dashboard.children.length > 0 ? (
+              {parentData?.children && parentData.children.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {dashboard.children.map((child) => (
+                  {parentData.children.map((child: any) => (
                     <div key={child.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div>
