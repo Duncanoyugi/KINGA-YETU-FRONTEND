@@ -39,8 +39,16 @@ const RecordVaccinationPage: React.FC = () => {
   
   // Use health worker's facility if available, otherwise use schedule's facility
   const facilityId = healthWorkerFacilityId || scheduleFacilityId || '';
-  const facilityName = healthWorkerFacilityName || scheduleFacilityName || 'Facility Information Not Available';
   const healthWorkerId = (user as any)?.healthWorker?.id || user?.id || '';
+  
+  // If no facility available, force redirect to dashboard for setup
+  if (!facilityId) {
+    toast.error('Facility information is missing. Please set up your facility first.');
+    window.location.href = '/dashboard/health-worker?setup=true';
+    return null;
+  }
+  
+  const facilityName = healthWorkerFacilityName || scheduleFacilityName || 'Facility Information Not Available';
 
   const calculateAgeInDays = (dateOfBirth: string, administeredDate: string) => {
     const dob = new Date(dateOfBirth);
@@ -73,7 +81,8 @@ const RecordVaccinationPage: React.FC = () => {
     }
 
     if (!facilityId) {
-      toast.error('Facility information is missing. Please ensure your facility is properly configured or contact your administrator.');
+      toast.error('Facility information is missing. Please set up your facility first.');
+      window.location.href = '/dashboard/health-worker?setup=true';
       return;
     }
 
