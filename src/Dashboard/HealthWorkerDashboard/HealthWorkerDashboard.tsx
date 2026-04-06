@@ -1199,7 +1199,8 @@ const HealthWorkerDashboard: React.FC = () => {
       return;
     }
 
-    if (!user.healthWorker?.facility && !facilitySetupCompleted) {
+    // Show modal if no facility assigned OR no healthWorker profile yet
+    if (!user.healthWorker?.facility && !user.healthWorker?.facilityId && !facilitySetupCompleted) {
       setShowFacilityModal(true);
     } else {
       setShowFacilityModal(false);
@@ -1370,7 +1371,10 @@ const HealthWorkerDashboard: React.FC = () => {
           {/* Health worker sub-pages (keep shell) */}
           <Route path="appointments" element={<Appointments />} />
           <Route path="vaccinations/*" element={
-            user?.healthWorker?.facility || user?.healthWorker?.facilityId || localStorage.getItem('facilitySetupCompleted') === 'true' ? (
+            // Allow access if: has facility, has facilityId, or has completed setup before
+            user?.healthWorker?.facility || user?.healthWorker?.facilityId || 
+            (user?.healthWorker && !user?.healthWorker?.facility) ||
+            localStorage.getItem('facilitySetupCompleted') === 'true' ? (
               <Routes>
                 <Route path="/" element={<VaccinationAdministrationPage />} />
                 <Route path="record/:appointmentId" element={<RecordVaccinationPage />} />
