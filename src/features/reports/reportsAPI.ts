@@ -171,7 +171,7 @@ export const reportsAPI = createApi({
       scheduledCount: number;
       popularTypes: Array<{ type: ReportType; count: number }>;
     }, void>({
-      query: () => '/stats',
+      query: () => '/stats/summary',
       providesTags: ['Reports', 'Scheduled'],
     }),
   }),
