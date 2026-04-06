@@ -1360,7 +1360,7 @@ const HealthWorkerDashboard: React.FC = () => {
                   <div className="space-y-6">
                     <AlertsWidget
                       alerts={alerts}
-                      onViewAll={() => navigate(HEALTH_WORKER_ROUTE_MAP.reports)}
+                      onViewAll={() => navigate(HEALTH_WORKER_ROUTE_MAP.inventory)}
                     />
                     <QueueSummary queue={queueSummary} />
                     <InventorySummary
