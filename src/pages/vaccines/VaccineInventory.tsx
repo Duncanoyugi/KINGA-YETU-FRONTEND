@@ -169,7 +169,7 @@ export const VaccineInventory: React.FC = () => {
             <Button
               variant="primary"
               leftIcon={<PlusIcon className="h-5 w-5" />}
-              onClick={() => navigate(ROUTES.ADD_INVENTORY)}
+              onClick={() => navigate('/dashboard/health-worker/inventory/add')}
             >
               Add Stock
             </Button>
