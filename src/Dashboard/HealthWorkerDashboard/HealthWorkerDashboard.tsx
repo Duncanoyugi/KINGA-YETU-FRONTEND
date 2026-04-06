@@ -60,6 +60,8 @@ import { useGetRealTimeStatsQuery, useGetDashboardMetricsQuery } from '@/feature
 import ChildrenList from '@/pages/children/ChildrenList';
 
 import ReportsDashboard from '@/pages/reports/ReportsDashboard';
+import CoverageReports from '@/pages/reports/CoverageReports';
+import FacilityReports from '@/pages/reports/FacilityReports';
 import VaccineInventory from '@/pages/vaccines/VaccineInventory';
 import AddInventory from '@/pages/vaccines/AddInventory';
 import VaccinationAdministrationPage from '@/pages/vaccinations/VaccinationAdministration';
@@ -1407,6 +1409,8 @@ const HealthWorkerDashboard: React.FC = () => {
           <Route path="inventory" element={<VaccineInventory />} />
           <Route path="inventory/add" element={<AddInventory />} />
           <Route path="reports" element={<ReportsDashboard />} />
+          <Route path="reports/coverage" element={<CoverageReports />} />
+          <Route path="reports/facility" element={<FacilityReports />} />
           <Route path="settings" element={<SettingsPage />} />
 
           {/* Facility Setup - dedicated route */}
