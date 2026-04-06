@@ -77,6 +77,40 @@ const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }
   );
 };
 
+// Error display component
+const ErrorDisplay: React.FC<{ 
+  message?: string; 
+  onRetry?: () => void;
+}> = ({ message = 'Something went wrong', onRetry }) => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
+      <AlertCircle className="h-12 w-12 text-rose-500 mb-4" />
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        Unable to load data
+      </h2>
+      <p className="text-gray-600 dark:text-gray-400 mb-4 text-center max-w-md">
+        {message}
+      </p>
+      <div className="flex gap-3">
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Try Again
+          </button>
+        )}
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        >
+          Reload Page
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // Type definitions
 type AppointmentStatus = 'checked-in' | 'waiting' | 'scheduled' | 'completed' | 'no-show';
 type StockStatus = 'ok' | 'low' | 'critical';
@@ -423,17 +457,27 @@ const Header: React.FC<{
 
 const StatsGrid: React.FC<{
   appointments: number;
+  appointmentsRemaining?: number;
   vaccinations: number;
+  vaccinationsTrend?: number;
   children: number;
   alerts: number;
   onStatClick?: (stat: string) => void;
-}> = ({ appointments, vaccinations, children, alerts, onStatClick }) => {
+}> = ({ 
+  appointments, 
+  appointmentsRemaining = 0,
+  vaccinations, 
+  vaccinationsTrend,
+  children, 
+  alerts, 
+  onStatClick 
+}) => {
   const stats = [
     {
       id: 'appointments',
       label: "Today's Appointments",
       value: appointments,
-      subtitle: '3 remaining',
+      subtitle: appointmentsRemaining > 0 ? `${appointmentsRemaining} remaining` : 'All done',
       icon: CalendarCheck,
       color: 'primary',
       trend: null,
@@ -445,7 +489,7 @@ const StatsGrid: React.FC<{
       subtitle: null,
       icon: Syringe,
       color: 'success',
-      trend: { value: 4, direction: 'up', label: 'vs yesterday' },
+      trend: vaccinationsTrend ? { value: vaccinationsTrend, direction: vaccinationsTrend > 0 ? 'up' : 'down', label: 'vs yesterday' } : null,
     },
     {
       id: 'children',
@@ -460,7 +504,7 @@ const StatsGrid: React.FC<{
       id: 'alerts',
       label: 'Stock Alerts',
       value: alerts,
-      subtitle: 'Require attention',
+      subtitle: alerts > 0 ? 'Require attention' : 'All good',
       icon: AlertTriangle,
       color: 'warning',
       trend: null,
@@ -553,6 +597,12 @@ const AppointmentsSection: React.FC<{
       a.vaccine.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredUpcoming = upcoming.filter(
+    (a) =>
+      a.childName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.vaccine.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -621,7 +671,7 @@ const AppointmentsSection: React.FC<{
               transition={{ duration: 0.2 }}
               className="space-y-3"
             >
-              {(activeTab === 'today' ? filteredAppointments : upcoming).map((appt) => {
+              {(activeTab === 'today' ? filteredAppointments : filteredUpcoming).map((appt) => {
                 const StatusIcon = statusConfig[appt.status].icon;
                 return (
                   <motion.div
@@ -685,9 +735,10 @@ const AppointmentsSection: React.FC<{
 
 const ChildrenTable: React.FC<{
   children: Child[];
+  totalCount?: number;
   onViewAll: () => void;
   onViewChild: (childId: string) => void;
-}> = ({ children, onViewAll, onViewChild }) => {
+}> = ({ children, totalCount, onViewAll, onViewChild }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -704,7 +755,7 @@ const ChildrenTable: React.FC<{
           onClick={onViewAll}
           className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium"
         >
-          View All <ChevronRight className="h-4 w-4" />
+          View All {totalCount ? `(${totalCount})` : ''} <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
@@ -986,16 +1037,19 @@ const HealthWorkerDashboard: React.FC = () => {
     { skip: !user }
   );
 
+  // Extract facility ID for better null handling
+  const facilityId = user?.healthWorker?.facility?.id;
+
   // Fetch inventory
   const { data: inventoryData, isLoading: inventoryLoading } = useGetInventoryQuery(
-    { facilityId: user?.healthWorker?.facility?.id },
-    { skip: !user?.healthWorker?.facility?.id }
+    { facilityId },
+    { skip: !facilityId }
   );
 
   // Fetch stock alerts
   const { data: alertsData, isLoading: alertsLoading } = useGetStockAlertsQuery(
-    { facilityId: user?.healthWorker?.facility?.id },
-    { skip: !user?.healthWorker?.facility?.id, pollingInterval: 300000 }
+    { facilityId },
+    { skip: !facilityId, pollingInterval: 300000 }
   );
 
   // Fetch upcoming schedules
@@ -1017,7 +1071,8 @@ const HealthWorkerDashboard: React.FC = () => {
       vaccine: schedule.vaccine?.name || schedule.vaccineName || 'N/A',
       time: new Date(schedule.scheduledDate).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' }),
       status: (schedule.status === 'COMPLETED' ? 'completed' : 
-              schedule.status === 'CANCELLED' ? 'no-show' :
+              schedule.status === 'CANCELLED' || schedule.status === 'NO_SHOW' ? 'no-show' :
+              schedule.status === 'CHECKED_IN' ? 'checked-in' :
               schedule.status === 'IN_PROGRESS' ? 'waiting' : 'scheduled') as AppointmentStatus,
       parentName: schedule.child?.parent?.firstName ? `${schedule.child.parent.firstName} ${schedule.child.parent.lastName || ''}` : undefined,
       parentPhone: schedule.child?.parent?.phoneNumber,
@@ -1027,14 +1082,18 @@ const HealthWorkerDashboard: React.FC = () => {
   const upcomingAppointments: Appointment[] = React.useMemo(() => {
     if (!upcomingData?.vaccines) return [];
     return upcomingData.vaccines.map((schedule: any) => ({
-      id: schedule.scheduleId,
-      childName: schedule.childName || 'Unknown',
-      age: schedule.childDateOfBirth ? 
-        `${Math.floor((new Date().getTime() - new Date(schedule.childDateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : 'Unknown',
-      vaccine: schedule.vaccineName || 'N/A',
-      time: new Date(schedule.dueDate).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' }),
+      id: schedule.id,
+      childName: schedule.child?.firstName 
+        ? `${schedule.child.firstName} ${schedule.child.lastName || ''}` 
+        : 'Unknown',
+      age: schedule.child?.dateOfBirth ? 
+        `${Math.floor((new Date().getTime() - new Date(schedule.child.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : 'Unknown',
+      vaccine: schedule.vaccine?.name || schedule.vaccineName || 'N/A',
+      time: new Date(schedule.scheduledDate || schedule.dueDate).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' }),
       status: 'scheduled' as AppointmentStatus,
-      parentName: schedule.parentName,
+      parentName: schedule.child?.parent?.firstName 
+        ? `${schedule.child.parent.firstName} ${schedule.child.parent.lastName || ''}` 
+        : undefined,
     }));
   }, [upcomingData]);
 
@@ -1090,9 +1149,13 @@ const HealthWorkerDashboard: React.FC = () => {
     const scheduleItems = (schedulesData?.data || []) as any[];
     return {
       checkedIn: scheduleItems.filter((s) => s.status === 'CHECKED_IN').length,
-      waiting: scheduleItems.filter((s) => s.status === 'IN_PROGRESS').length,
+      waiting: scheduleItems.filter((s) => 
+        s.status === 'IN_PROGRESS' || s.status === 'WAITING'
+      ).length,
       completed: scheduleItems.filter((s) => s.status === 'COMPLETED').length,
-      noShows: scheduleItems.filter((s) => s.status === 'NO_SHOW' || s.status === 'CANCELLED').length,
+      noShows: scheduleItems.filter((s) => 
+        s.status === 'NO_SHOW' || s.status === 'CANCELLED'
+      ).length,
     };
   }, [schedulesData]);
 
@@ -1118,7 +1181,12 @@ const HealthWorkerDashboard: React.FC = () => {
   
   // Facility details modal state
   const [showFacilityModal, setShowFacilityModal] = useState(false);
-  const [facilitySetupCompleted, setFacilitySetupCompleted] = useState(false);
+  const [facilitySetupCompleted, setFacilitySetupCompleted] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('facilitySetupCompleted') === 'true';
+    }
+    return false;
+  });
   
   React.useEffect(() => {
     if (!user || user.role !== 'HEALTH_WORKER') {
@@ -1152,7 +1220,6 @@ const HealthWorkerDashboard: React.FC = () => {
     if (token) {
       try {
         const response = await refetchUser();
-        console.log('[HealthWorkerDashboard] refetchUser result:', response);
 
         if (response && 'data' in response && response.data) {
           dispatch(setCredentials({ user: response.data, token }));
@@ -1163,12 +1230,15 @@ const HealthWorkerDashboard: React.FC = () => {
     }
 
     setFacilitySetupCompleted(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('facilitySetupCompleted', 'true');
+    }
     setShowFacilityModal(false);
     navigate(HEALTH_WORKER_BASE_PATH, { replace: true });
   };
 
   const handleViewChild = (childId: string) => {
-    console.log('View child profile:', childId);
+    navigate(`${HEALTH_WORKER_ROUTE_MAP.children}/${childId}`);
   };
 
   const handleInventoryClick = () => {
@@ -1187,6 +1257,11 @@ const HealthWorkerDashboard: React.FC = () => {
 
   // Show loading state
   const isLoading = realtimeLoading || metricsLoading || childrenLoading || inventoryLoading || alertsLoading || schedulesLoading || upcomingLoading;
+  
+  // Get errors from queries
+  const hasError = !isLoading && (
+    !schedulesData?.data && !childrenData?.data && !inventoryData?.data
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -1241,13 +1316,20 @@ const HealthWorkerDashboard: React.FC = () => {
                   <div className="flex justify-center py-12">
                     <LoadingSpinner size="lg" />
                   </div>
+                ) : hasError ? (
+                  <ErrorDisplay 
+                    message="Failed to load dashboard data. Please check your connection and try again."
+                    onRetry={() => window.location.reload()}
+                  />
                 ) : (
                   <StatsGrid
                     appointments={stats.appointments}
+                    appointmentsRemaining={stats.appointments - stats.vaccinations}
                     vaccinations={stats.vaccinations}
+                    vaccinationsTrend={4}
                     children={stats.children}
                     alerts={stats.alerts}
-                    onStatClick={(stat) => console.log('Stat clicked:', stat)}
+                    onStatClick={() => {}}
                   />
                 )}
                 {/* Main Content Grid */}
@@ -1263,6 +1345,7 @@ const HealthWorkerDashboard: React.FC = () => {
                     />
                     <ChildrenTable
                       children={dashboardChildren}
+                      totalCount={childrenData?.pagination?.total || childrenData?.data?.length}
                       onViewAll={() => navigate(HEALTH_WORKER_ROUTE_MAP.children)}
                       onViewChild={handleViewChild}
                     />
