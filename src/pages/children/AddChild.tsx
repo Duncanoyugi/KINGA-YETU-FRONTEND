@@ -26,14 +26,22 @@ export const AddChild: React.FC = () => {
   const [parentSearchTerm, setParentSearchTerm] = useState('');
   const [selectedParent, setSelectedParent] = useState<any | null>(null);
 
-  // Get user's county from parent profile
-  const userCounty = (user?.parentProfile as any)?.county || '';
+  // Get user's county from user profile (not parentProfile)
+  const userCounty = user?.profile?.county || '';
   
   // Fetch facilities - filter by county if parent has one set
-  const { data: facilities = [] } = useGetFacilitiesQuery(
+  console.log('AddChild - userCounty:', userCounty);
+  console.log('AddChild - user?.profile:', user?.profile);
+  
+  // Don't skip - always fetch facilities but use filter when county exists
+  const { data: facilities = [], isLoading: facilitiesLoading, error: facilitiesError } = useGetFacilitiesQuery(
     { county: userCounty || undefined },
-    { skip: !userCounty }
+    { skip: false } // Always fetch, let backend handle empty filter
   );
+  
+  console.log('AddChild - facilities:', facilities);
+  console.log('AddChild - facilitiesLoading:', facilitiesLoading);
+  console.log('AddChild - facilitiesError:', facilitiesError);
 
   const { data: parentSearchData, refetch: refetchParents, isFetching: parentSearchLoading } = useGetParentsQuery(
     { search: parentSearchTerm, page: 1, limit: 5 },
@@ -255,10 +263,11 @@ export const AddChild: React.FC = () => {
                       error={errors.birthCertificateNo?.message}
                       placeholder="e.g., 12345678"
                     />
-                    {facilities.length > 0 ? (
+                    {/* Show dropdown when we have facilities, otherwise text input */}
+                    {userCounty && facilities.length > 0 ? (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Birth Facility
+                          Birth Facility ({userCounty} county)
                         </label>
                         <select
                           {...register('birthFacilityId')}
@@ -275,6 +284,12 @@ export const AddChild: React.FC = () => {
                           <p className="mt-1 text-sm text-red-600">{errors.birthFacilityId.message}</p>
                         )}
                       </div>
+                    ) : userCounty && facilitiesLoading ? (
+                      <Input
+                        label="Birth Facility"
+                        value="Loading facilities..."
+                        disabled
+                      />
                     ) : (
                       <Input
                         label="Birth Facility (Optional)"
