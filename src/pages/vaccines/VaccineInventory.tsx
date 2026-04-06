@@ -22,10 +22,13 @@ import { ROUTES } from '@/routing/routes';
 
 export const VaccineInventory: React.FC = () => {
   const navigate = useNavigate();
-  const { isAdmin, isHealthWorker } = useAuth();
+  const { user, isAdmin, isHealthWorker } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('inventory');
   const debouncedSearch = useDebounce(searchTerm, 500);
+
+  // Get facilityId from user
+  const facilityId = (user as any)?.healthWorker?.facility?.id || (user as any)?.healthWorker?.facilityId;
 
   const {
     inventory,
@@ -33,9 +36,9 @@ export const VaccineInventory: React.FC = () => {
     getLowStockItems,
     getExpiringItems,
     getExpiredItems,
-  } = useVaccineInventory();
+  } = useVaccineInventory(facilityId);
 
-  const { getCriticalAlerts, getWarningAlerts } = useVaccineAlerts();
+  const { getCriticalAlerts, getWarningAlerts } = useVaccineAlerts(facilityId);
 
   const tabs = [
     { id: 'inventory', label: 'Current Stock' },
