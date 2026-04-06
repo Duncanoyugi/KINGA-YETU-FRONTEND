@@ -40,7 +40,16 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
 
   // Load parent data
   useEffect(() => {
+    console.log('parentData:', parentData);
+    console.log('parentId:', parentId);
     if (parentData) {
+      console.log('Setting form data from parentData:', {
+        emergencyContact: parentData.emergencyContact,
+        emergencyPhone: parentData.emergencyPhone,
+        county: parentData.county,
+        subCounty: parentData.subCounty,
+        address: parentData.address,
+      });
       setFormData({
         emergencyContact: parentData.emergencyContact || '',
         emergencyPhone: parentData.emergencyPhone || '',
@@ -89,6 +98,9 @@ export const ParentProfile: React.FC<ParentProfileProps> = ({ isLayoutOnly = fal
     subCounty: formData.subCounty || parentData?.subCounty || '',
     address: formData.address || parentData?.address || '',
   };
+  
+  console.log('parentInfo:', parentInfo);
+  console.log('formData:', formData);
 
   if (!isLayoutOnly && parentLoading) {
     return (
