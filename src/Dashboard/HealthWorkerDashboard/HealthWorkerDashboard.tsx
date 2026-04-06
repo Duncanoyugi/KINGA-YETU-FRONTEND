@@ -61,6 +61,7 @@ import ChildrenList from '@/pages/children/ChildrenList';
 
 import ReportsDashboard from '@/pages/reports/ReportsDashboard';
 import VaccineInventory from '@/pages/vaccines/VaccineInventory';
+import AddInventory from '@/pages/vaccines/AddInventory';
 import VaccinationAdministrationPage from '@/pages/vaccinations/VaccinationAdministration';
 import RecordVaccinationPage from '@/pages/vaccinations/RecordVaccination';
 import SettingsPage from '@/pages/settings/Settings';
@@ -1404,6 +1405,7 @@ const HealthWorkerDashboard: React.FC = () => {
           } />
           <Route path="children" element={<ChildrenList />} />
           <Route path="inventory" element={<VaccineInventory />} />
+          <Route path="inventory/add" element={<AddInventory />} />
           <Route path="reports" element={<ReportsDashboard />} />
           <Route path="settings" element={<SettingsPage />} />
 
