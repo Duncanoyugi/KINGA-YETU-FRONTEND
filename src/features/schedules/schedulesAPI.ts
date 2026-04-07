@@ -47,6 +47,12 @@ export const schedulesAPI = createApi({
       providesTags: ['Schedules'],
     }),
     
+    // Get facility-specific upcoming schedules
+    getFacilityUpcomingSchedules: builder.query<UpcomingVaccinesResponse, string>({
+      query: (facilityId) => `/facility/${facilityId}/upcoming`,
+      providesTags: ['Schedules'],
+    }),
+    
     // Create new schedule
     createSchedule: builder.mutation<Schedule, CreateScheduleRequest>({
       query: (body) => ({
@@ -116,6 +122,7 @@ export const {
   useGetScheduleByIdQuery,
   useGetSchedulesByChildIdQuery,
   useGetUpcomingSchedulesQuery,
+  useGetFacilityUpcomingSchedulesQuery,
   useCreateScheduleMutation,
   useUpdateScheduleMutation,
   useDeleteScheduleMutation,

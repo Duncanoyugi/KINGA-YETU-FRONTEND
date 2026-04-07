@@ -52,10 +52,10 @@ import {
 } from 'lucide-react';
 
 // API imports
-import { useGetSchedulesQuery, useGetUpcomingSchedulesQuery } from '@/features/schedules/schedulesAPI';
+import { useGetSchedulesQuery, useGetUpcomingSchedulesQuery, useGetFacilityUpcomingSchedulesQuery } from '@/features/schedules/schedulesAPI';
 import { useGetChildrenQuery } from '@/features/children/childrenAPI';
 import { useGetInventoryQuery, useGetStockAlertsQuery } from '@/features/vaccines/vaccinesAPI';
-import { useGetRealTimeStatsQuery, useGetDashboardMetricsQuery } from '@/features/analytics/analyticsAPI';
+import { useGetRealTimeStatsQuery, useGetDashboardMetricsQuery, useGetHealthWorkerDashboardStatsQuery } from '@/features/analytics/analyticsAPI';
 
 import ChildrenList from '@/pages/children/ChildrenList';
 
@@ -271,7 +271,9 @@ const Sidebar: React.FC<{
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onLogout: () => void;
-}> = ({ activeView, onViewChange, isCollapsed, onToggleCollapse, onLogout }) => {
+  showMobileMenu: boolean;
+  onCloseMobileMenu: () => void;
+}> = ({ activeView, onViewChange, isCollapsed, onToggleCollapse, onLogout, showMobileMenu, onCloseMobileMenu }) => {
   const navItems = [
     { id: 'dashboard' as ViewMode, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'appointments' as ViewMode, label: 'Appointments', icon: CalendarCheck },
@@ -284,13 +286,32 @@ const Sidebar: React.FC<{
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Mobile responsive classes
+  const sidebarClasses = showMobileMenu 
+    ? 'translate-x-0 w-72' 
+    : '-translate-x-full lg:translate-x-0 lg:w-auto';
+  
   return (
-    <motion.aside
-      initial={{ width: isCollapsed ? 80 : 280 }}
-      animate={{ width: isCollapsed ? 80 : 280 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed left-0 top-0 z-30 flex flex-col"
-    >
+    <>
+      {/* Mobile Overlay */}
+      {showMobileMenu && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          onClick={onCloseMobileMenu}
+        />
+      )}
+      <motion.aside
+        initial={{ width: isCollapsed ? 80 : 280 }}
+        animate={{ width: isCollapsed ? 80 : 280 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className={`
+          h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 
+          fixed left-0 top-0 z-30 flex flex-col
+          lg:relative
+          ${sidebarClasses}
+        `}
+      >
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
         {!isCollapsed && (
@@ -334,6 +355,7 @@ const Sidebar: React.FC<{
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 onViewChange(item.id);
+                onCloseMobileMenu();
                 navigate(HEALTH_WORKER_ROUTE_MAP[item.id] || HEALTH_WORKER_BASE_PATH);
               }}
               className={`
@@ -387,6 +409,7 @@ const Sidebar: React.FC<{
         )}
       </div>
     </motion.aside>
+    </>
   );
 };
 
@@ -444,14 +467,18 @@ const Header: React.FC<{
 
         {/* Quick Stats Pills */}
         <div className="mt-6 flex flex-wrap gap-3">
-          <div className="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" />
-            <span>+4 vs yesterday</span>
-          </div>
-          <div className="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            <span>24 children today</span>
-          </div>
+          {hwStats && hwStats.vaccinationsThisMonth > 0 && (
+            <div className="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              <span>{hwStats.vaccinationsThisMonth} this month</span>
+            </div>
+          )}
+          {hwStats && hwStats.totalChildren > 0 && (
+            <div className="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              <span>{hwStats.totalChildren} children</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -1021,27 +1048,23 @@ const HealthWorkerDashboard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  // Fetch real-time stats
-  const { data: realtimeStats, isLoading: realtimeLoading } = useGetRealTimeStatsQuery(undefined, {
-    pollingInterval: 60000,
-  });
-
-
-  // Fetch dashboard metrics
-  const today = new Date().toISOString().split('T')[0];
-  const { data: dashboardMetrics, isLoading: metricsLoading } = useGetDashboardMetricsQuery(
-    { startDate: today, endDate: today },
-    { skip: !user }
-  );
-
-  // Fetch children list
-  const { data: childrenData, isLoading: childrenLoading } = useGetChildrenQuery(
-    { page: 1, limit: 10 },
-    { skip: !user }
-  );
-
   // Extract facility ID for better null handling
   const facilityId = user?.healthWorker?.facility?.id;
+
+  // Fetch facility-specific health worker dashboard stats (instead of global analytics)
+  const { data: hwStats, isLoading: hwStatsLoading } = useGetHealthWorkerDashboardStatsQuery(
+    facilityId || '',
+    { 
+      skip: !facilityId,
+      pollingInterval: 60000,
+    }
+  );
+
+  // Fetch children list (with facility filter)
+  const { data: childrenData, isLoading: childrenLoading } = useGetChildrenQuery(
+    { page: 1, limit: 10, facilityId },
+    { skip: !user }
+  );
 
   // Fetch inventory
   const { data: inventoryData, isLoading: inventoryLoading } = useGetInventoryQuery(
@@ -1055,12 +1078,16 @@ const HealthWorkerDashboard: React.FC = () => {
     { skip: !facilityId, pollingInterval: 300000 }
   );
 
-  // Fetch upcoming schedules
-  const { data: upcomingData, isLoading: upcomingLoading } = useGetUpcomingSchedulesQuery(7);
+  // Fetch facility-specific upcoming schedules
+  const { data: upcomingData, isLoading: upcomingLoading } = useGetFacilityUpcomingSchedulesQuery(
+    facilityId || '',
+    { skip: !facilityId }
+  );
 
-  // Fetch today's schedules (don't filter by facility - backend doesn't support it)
+  // Fetch today's schedules filtered by facility (if facility exists)
   const { data: schedulesData, isLoading: schedulesLoading } = useGetSchedulesQuery({
     startDate: new Date().toISOString().split('T')[0],
+    facilityId,
   });
 
   // Transform API data to component format
@@ -1072,31 +1099,31 @@ const HealthWorkerDashboard: React.FC = () => {
       age: schedule.child?.dateOfBirth ? 
         `${Math.floor((new Date().getTime() - new Date(schedule.child.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : 'Unknown',
       vaccine: schedule.vaccine?.name || schedule.vaccineName || 'N/A',
-      time: new Date(schedule.scheduledDate).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' }),
+      // Use dueDate instead of scheduledDate (backend uses dueDate)
+      time: new Date(schedule.dueDate || schedule.scheduledDate).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' }),
       status: (schedule.status === 'COMPLETED' ? 'completed' : 
               schedule.status === 'CANCELLED' || schedule.status === 'NO_SHOW' ? 'no-show' :
               schedule.status === 'CHECKED_IN' ? 'checked-in' :
               schedule.status === 'IN_PROGRESS' ? 'waiting' : 'scheduled') as AppointmentStatus,
-      parentName: schedule.child?.parent?.firstName ? `${schedule.child.parent.firstName} ${schedule.child.parent.lastName || ''}` : undefined,
-      parentPhone: schedule.child?.parent?.phoneNumber,
+      parentName: schedule.parentName || (schedule.child?.parent?.user?.fullName),
+      parentPhone: schedule.parentPhone || schedule.child?.parent?.user?.phoneNumber,
     }));
   }, [schedulesData]);
 
   const upcomingAppointments: Appointment[] = React.useMemo(() => {
     if (!upcomingData?.vaccines) return [];
     return upcomingData.vaccines.map((schedule: any) => ({
-      id: schedule.id,
-      childName: schedule.child?.firstName 
-        ? `${schedule.child.firstName} ${schedule.child.lastName || ''}` 
-        : 'Unknown',
-      age: schedule.child?.dateOfBirth ? 
-        `${Math.floor((new Date().getTime() - new Date(schedule.child.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : 'Unknown',
-      vaccine: schedule.vaccine?.name || schedule.vaccineName || 'N/A',
-      time: new Date(schedule.scheduledDate || schedule.dueDate).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' }),
+      id: schedule.scheduleId || schedule.id,
+      // Use childName from backend (not nested child.firstName)
+      childName: schedule.childName || 'Unknown',
+      age: schedule.childDateOfBirth ? 
+        `${Math.floor((new Date().getTime() - new Date(schedule.childDateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30))} months` : 'Unknown',
+      vaccine: schedule.vaccineName || 'N/A',
+      // Use dueDate from backend
+      time: schedule.dueDate ? new Date(schedule.dueDate).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' }) : 'N/A',
       status: 'scheduled' as AppointmentStatus,
-      parentName: schedule.child?.parent?.firstName 
-        ? `${schedule.child.parent.firstName} ${schedule.child.parent.lastName || ''}` 
-        : undefined,
+      // Use parentName from backend (not nested)
+      parentName: schedule.parentName,
     }));
   }, [upcomingData]);
 
@@ -1162,12 +1189,12 @@ const HealthWorkerDashboard: React.FC = () => {
     };
   }, [schedulesData]);
 
-  // Get stats from API data
+  // Get stats from facility-specific health worker dashboard API
   const stats = {
-    appointments: realtimeStats?.pendingAppointments || appointments.length,
-    vaccinations: realtimeStats?.todayVaccinations || dashboardMetrics?.totalVaccinations || 0,
-    children: dashboardChildren.length,
-    alerts: alerts.length,
+    appointments: hwStats?.upcomingVaccinations || appointments.length,
+    vaccinations: hwStats?.vaccinationsThisMonth || 0,
+    children: hwStats?.totalChildren || dashboardChildren.length,
+    alerts: hwStats?.lowStockAlerts || alerts.length,
   };
 
   const hour = new Date().getHours();
@@ -1264,11 +1291,11 @@ const HealthWorkerDashboard: React.FC = () => {
   };
 
   // Show loading state
-  const isLoading = realtimeLoading || metricsLoading || childrenLoading || inventoryLoading || alertsLoading || schedulesLoading || upcomingLoading;
+  const isLoading = hwStatsLoading || childrenLoading || inventoryLoading || alertsLoading || schedulesLoading || upcomingLoading;
   
   // Get errors from queries
   const hasError = !isLoading && (
-    !schedulesData?.data && !childrenData?.data && !inventoryData?.data
+    !hwStats && !schedulesData?.data && !childrenData?.data && !inventoryData?.data
   );
 
   return (
@@ -1289,6 +1316,8 @@ const HealthWorkerDashboard: React.FC = () => {
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onLogout={handleLogout}
+        showMobileMenu={showMobileMenu}
+        onCloseMobileMenu={() => setShowMobileMenu(false)}
       />
 
       {/* Mobile Menu Button */}
@@ -1332,9 +1361,9 @@ const HealthWorkerDashboard: React.FC = () => {
                 ) : (
                   <StatsGrid
                     appointments={stats.appointments}
-                    appointmentsRemaining={stats.appointments - stats.vaccinations}
+                    appointmentsRemaining={hwStats?.missedAppointments || 0}
                     vaccinations={stats.vaccinations}
-                    vaccinationsTrend={4}
+                    vaccinationsTrend={hwStats?.coverageRate ? Math.round(hwStats.coverageRate) : undefined}
                     children={stats.children}
                     alerts={stats.alerts}
                     onStatClick={() => {}}
