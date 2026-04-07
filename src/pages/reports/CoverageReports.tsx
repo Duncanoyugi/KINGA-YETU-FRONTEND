@@ -191,7 +191,7 @@ export const CoverageReports: React.FC = () => {
               <Card.Header title="Coverage by Age Group" />
               <Card.Body>
                 <BarChart
-                  data={coverageData.byAgeGroup.map(item => ({
+                  data={coverageData.byAgeGroup.map((item: any) => ({
                     label: item.ageGroup,
                     value: item.coverage,
                   }))}
@@ -247,7 +247,7 @@ export const CoverageReports: React.FC = () => {
             <Card.Body>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <PieChart
-                  data={coverageData.byVaccine.map(v => ({
+                  data={coverageData.byVaccine.map((v: any) => ({
                     label: v.vaccineName,
                     value: v.administered,
                   }))}
@@ -256,7 +256,7 @@ export const CoverageReports: React.FC = () => {
                   donut
                 />
                 <div className="space-y-4">
-                  {coverageData.byVaccine.map((vaccine) => (
+                  {coverageData.byVaccine.map((vaccine: any) => (
                     <div key={vaccine.vaccineId}>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="font-medium text-gray-700">{vaccine.vaccineName}</span>
@@ -375,7 +375,7 @@ export const CoverageReports: React.FC = () => {
               <Card.Header title="Coverage by Age Group" />
               <Card.Body>
                 <PieChart
-                  data={coverageData.byAgeGroup.map(item => ({
+                  data={coverageData.byAgeGroup.map((item: any) => ({
                     label: item.ageGroup,
                     value: item.covered,
                   }))}

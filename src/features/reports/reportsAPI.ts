@@ -1,9 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { 
   Report,
-  CoverageReportData,
-  MissedVaccinesData,
-  FacilityPerformanceData,
   DemographicData,
   TimelinessData,
   GenerateReportRequest,
@@ -16,6 +13,13 @@ import type {
 } from './reportsTypes';
 import type { RootState } from '@/app/store/store';
 import { API_URL } from '@/config/environment';
+
+const flattenReportParameters = (params: ReportParameters & { userId?: string }) => ({
+  ...params,
+  startDate: params.dateRange?.startDate,
+  endDate: params.dateRange?.endDate,
+  userId: params.userId,
+});
 
 export const reportsAPI = createApi({
   reducerPath: 'reportsAPI',
@@ -46,9 +50,10 @@ export const reportsAPI = createApi({
     }),
 
     generateReport: builder.mutation<Report, GenerateReportRequest>({
-      query: (request) => ({
-        url: '/generate',
+      query: ({ userId, ...request }) => ({
+        url: '/',
         method: 'POST',
+        params: userId ? { userId } : undefined,
         body: request,
       }),
       invalidatesTags: ['Reports', 'Generated'],
@@ -63,28 +68,35 @@ export const reportsAPI = createApi({
     }),
 
     // Report data endpoints
-    getCoverageReport: builder.query<CoverageReportData, ReportParameters>({
+    getCoverageReport: builder.query<any, ReportParameters & { userId?: string }>({
       query: (params) => ({
         url: '/coverage',
-        method: 'POST',
-        body: params,
+        params: flattenReportParameters(params),
       }),
       providesTags: ['Generated'],
     }),
 
-    getMissedVaccinesReport: builder.query<MissedVaccinesData, ReportParameters>({
+    getMissedVaccinesReport: builder.query<any, ReportParameters & { userId?: string }>({
       query: (params) => ({
         url: '/missed-vaccines',
         method: 'POST',
-        body: params,
+        params: params.userId ? { userId: params.userId } : undefined,
+        body: flattenReportParameters(params),
       }),
       providesTags: ['Generated'],
     }),
 
-    getFacilityPerformance: builder.query<FacilityPerformanceData, { facilityId: string; params: ReportParameters }>({
+    getFacilityPerformance: builder.query<any[], { facilityId: string; params: ReportParameters & { userId?: string } }>({
       query: ({ facilityId, params }) => ({
-        url: `/facility/${facilityId}/performance`,
-        params,
+        url: '/facility-stats',
+        method: 'POST',
+        params: params.userId ? { userId: params.userId } : undefined,
+        body: {
+          ...flattenReportParameters(params),
+          facilityIds: [facilityId],
+          includePerformanceRanking: true,
+          includeGrowthMetrics: true,
+        },
       }),
       providesTags: ['Generated'],
     }),
@@ -116,7 +128,8 @@ export const reportsAPI = createApi({
 
     downloadReport: builder.mutation<Blob, { reportId: string; format: ReportFormat }>({
       query: ({ reportId, format }) => ({
-        url: `/${reportId}/download`,
+        url: `/download/${reportId}`,
+        method: 'GET',
         params: { format },
         responseHandler: (response) => response.blob(),
       }),

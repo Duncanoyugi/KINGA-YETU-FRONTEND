@@ -183,6 +183,7 @@ export interface GenerateReportRequest {
   format?: ReportFormat;
   frequency?: ReportFrequency;
   scheduledFor?: string;
+  userId?: string;
 }
 
 export interface ReportParameters {

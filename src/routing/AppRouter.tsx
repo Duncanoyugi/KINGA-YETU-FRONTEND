@@ -26,6 +26,9 @@ import Appointments from '../pages/appointments/Appointments';
 import NotificationsCenter from '../pages/notifications/NotificationsCenter';
 import ReminderSettings from '../pages/notifications/ReminderSettings';
 import ReportsDashboard from '../pages/reports/ReportsDashboard';
+import CoverageReports from '../pages/reports/CoverageReports';
+import MissedVaccinesReport from '../pages/reports/MissedVaccinesReport';
+import FacilityReports from '../pages/reports/FacilityReports';
 import AnalyticsOverview from '../pages/analytics/AnalyticsOverview';
 import UserManagement from '../pages/admin/UserManagement';
 import FacilityManagement from '../pages/admin/FacilityManagement';
@@ -114,8 +117,9 @@ const AppRouter: React.FC = () => {
           <Route path={ROUTES.CERTIFICATES_CHILD} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
           <Route path={ROUTES.IMMUNIZATION_HISTORY} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
           <Route path={ROUTES.VACCINATION_HISTORY} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
-          <Route path={ROUTES.COVERAGE_REPORTS} element={<Navigate to={ROUTES.REPORTS_DASHBOARD} replace />} />
-          <Route path={ROUTES.MISSED_VACCINES} element={<Navigate to={ROUTES.REPORTS_DASHBOARD} replace />} />
+          <Route path={ROUTES.COVERAGE_REPORTS} element={<CoverageReports />} />
+          <Route path={ROUTES.MISSED_VACCINES} element={<MissedVaccinesReport />} />
+          <Route path={ROUTES.FACILITY_REPORTS} element={<FacilityReports />} />
           <Route path={ROUTES.COVERAGE_ANALYTICS} element={<Navigate to={ROUTES.ANALYTICS_OVERVIEW} replace />} />
           <Route path={ROUTES.DROPOUT_ANALYTICS} element={<Navigate to={ROUTES.ANALYTICS_OVERVIEW} replace />} />
           <Route path={ROUTES.PREDICTIVE_ANALYTICS} element={<Navigate to={ROUTES.ANALYTICS_OVERVIEW} replace />} />

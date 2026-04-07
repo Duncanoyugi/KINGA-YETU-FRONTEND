@@ -319,7 +319,7 @@ export const MissedVaccinesReport: React.FC = () => {
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {criticalMisses.map((miss, index) => (
+                  {criticalMisses.map((miss: any, index: number) => (
                     <div
                       key={index}
                       className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg"
@@ -370,7 +370,7 @@ export const MissedVaccinesReport: React.FC = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">1-7 days</span>
                     <span className="font-medium">
-                      {missedData.missedVaccines.filter(m => m.daysOverdue <= 7).length}
+                      {missedData.missedVaccines.filter((m: any) => m.daysOverdue <= 7).length}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -378,7 +378,7 @@ export const MissedVaccinesReport: React.FC = () => {
                       className="bg-yellow-500 h-2 rounded-full"
                       style={{
                         width: `${
-                          (missedData.missedVaccines.filter(m => m.daysOverdue <= 7).length /
+                          (missedData.missedVaccines.filter((m: any) => m.daysOverdue <= 7).length /
                             missedData.missedVaccines.length) * 100
                         }%`,
                       }}
@@ -388,7 +388,7 @@ export const MissedVaccinesReport: React.FC = () => {
                   <div className="flex justify-between text-sm mt-2">
                     <span className="text-gray-600">8-30 days</span>
                     <span className="font-medium">
-                      {missedData.missedVaccines.filter(m => m.daysOverdue > 7 && m.daysOverdue <= 30).length}
+                      {missedData.missedVaccines.filter((m: any) => m.daysOverdue > 7 && m.daysOverdue <= 30).length}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -396,7 +396,7 @@ export const MissedVaccinesReport: React.FC = () => {
                       className="bg-orange-500 h-2 rounded-full"
                       style={{
                         width: `${
-                          (missedData.missedVaccines.filter(m => m.daysOverdue > 7 && m.daysOverdue <= 30).length /
+                          (missedData.missedVaccines.filter((m: any) => m.daysOverdue > 7 && m.daysOverdue <= 30).length /
                             missedData.missedVaccines.length) * 100
                         }%`,
                       }}
@@ -406,7 +406,7 @@ export const MissedVaccinesReport: React.FC = () => {
                   <div className="flex justify-between text-sm mt-2">
                     <span className="text-gray-600">&gt;30 days</span>
                     <span className="font-medium">
-                      {missedData.missedVaccines.filter(m => m.daysOverdue > 30).length}
+                      {missedData.missedVaccines.filter((m: any) => m.daysOverdue > 30).length}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -414,7 +414,7 @@ export const MissedVaccinesReport: React.FC = () => {
                       className="bg-red-600 h-2 rounded-full"
                       style={{
                         width: `${
-                          (missedData.missedVaccines.filter(m => m.daysOverdue > 30).length /
+                          (missedData.missedVaccines.filter((m: any) => m.daysOverdue > 30).length /
                             missedData.missedVaccines.length) * 100
                         }%`,
                       }}

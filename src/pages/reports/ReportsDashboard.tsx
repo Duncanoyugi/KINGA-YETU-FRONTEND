@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DocumentChartBarIcon,
-  DocumentArrowDownIcon,
   ClockIcon,
   CalendarIcon,
   MapIcon,
@@ -11,7 +10,6 @@ import {
 import { useReports } from '@/features/reports/reportsHooks';
 import { useAuth } from '@/hooks/useAuth';
 import { useGetHealthWorkerDashboardStatsQuery } from '@/features/analytics/analyticsAPI';
-import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Spinner } from '@/components/common/Spinner';
@@ -26,6 +24,7 @@ const reportTypes = [
     icon: DocumentChartBarIcon,
     color: 'bg-blue-500',
     route: ROUTES.COVERAGE_REPORTS,
+    available: true,
   },
   {
     id: 'missed',
@@ -34,6 +33,7 @@ const reportTypes = [
     icon: ClockIcon,
     color: 'bg-red-500',
     route: ROUTES.MISSED_VACCINES,
+    available: true,
   },
   {
     id: 'facility',
@@ -42,6 +42,7 @@ const reportTypes = [
     icon: MapIcon,
     color: 'bg-green-500',
     route: ROUTES.FACILITY_REPORTS,
+    available: true,
   },
   {
     id: 'demographic',
@@ -49,30 +50,15 @@ const reportTypes = [
     description: 'Population coverage by demographics',
     icon: UserGroupIcon,
     color: 'bg-purple-500',
-    route: ROUTES.DEMOGRAPHIC_REPORTS,
-  },
-  {
-    id: 'timeliness',
-    name: 'Timeliness Report',
-    description: 'Vaccination timeliness metrics',
-    icon: CalendarIcon,
-    color: 'bg-yellow-500',
-    route: ROUTES.TIMELINESS_REPORTS,
-  },
-  {
-    id: 'custom',
-    name: 'Custom Report',
-    description: 'Generate custom reports with specific parameters',
-    icon: DocumentArrowDownIcon,
-    color: 'bg-gray-500',
-    route: ROUTES.CUSTOM_REPORT,
+    route: null,
+    available: false,
   },
 ];
 
 export const ReportsDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { isAdmin, isHealthWorker, user } = useAuth();
-  const { getRecentReports, isLoading } = useReports();
+  const { getRecentReports, isLoading, downloadReport } = useReports();
   
   const facilityId = user?.healthWorker?.facility?.id;
   const { data: healthWorkerStats } = useGetHealthWorkerDashboardStatsQuery(
@@ -82,6 +68,14 @@ export const ReportsDashboard: React.FC = () => {
   
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const recentReports = getRecentReports(5);
+
+  const handleReportClick = (report: typeof reportTypes[number]) => {
+    if (!report.available || !report.route) {
+      return;
+    }
+
+    navigate(report.route);
+  };
 
   const periodOptions = [
     { value: 'today', label: 'Today' },
@@ -129,8 +123,8 @@ export const ReportsDashboard: React.FC = () => {
         {reportTypes.map((report) => (
           <Card
             key={report.id}
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => navigate(report.route)}
+            className={`transition-shadow ${report.available ? 'cursor-pointer hover:shadow-lg' : 'cursor-not-allowed opacity-70'}`}
+            onClick={() => handleReportClick(report)}
           >
             <Card.Body>
               <div className="flex items-start space-x-4">
@@ -140,6 +134,11 @@ export const ReportsDashboard: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="text-lg font-medium text-gray-900">{report.name}</h3>
                   <p className="mt-1 text-sm text-gray-500">{report.description}</p>
+                  {!report.available && (
+                    <p className="mt-2 text-xs font-medium text-gray-400">
+                      This report view is not wired yet.
+                    </p>
+                  )}
                 </div>
               </div>
             </Card.Body>
@@ -149,14 +148,7 @@ export const ReportsDashboard: React.FC = () => {
 
       {/* Recent Reports */}
       <Card>
-        <Card.Header
-          title="Recently Generated Reports"
-          action={
-            <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.ALL_REPORTS)}>
-              View All
-            </Button>
-          }
-        />
+        <Card.Header title="Recently Generated Reports" />
         <Card.Body>
           {recentReports.length === 0 ? (
             <p className="text-gray-500 text-center py-4">No reports generated yet</p>
@@ -166,7 +158,7 @@ export const ReportsDashboard: React.FC = () => {
                 <div
                   key={report.id}
                   className="py-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(ROUTES.REPORT_DETAILS.replace(':id', report.id))}
+                  onClick={() => downloadReport(report.id, report.format)}
                 >
                   <div className="flex items-center space-x-3">
                     <DocumentChartBarIcon className="h-5 w-5 text-gray-400" />
@@ -248,14 +240,7 @@ export const ReportsDashboard: React.FC = () => {
       {/* Scheduled Reports */}
       {(isAdmin || isHealthWorker) && (
         <Card>
-          <Card.Header
-            title="Scheduled Reports"
-            action={
-              <Button variant="primary" size="sm" onClick={() => navigate(ROUTES.SCHEDULE_REPORT)}>
-                Schedule New
-              </Button>
-            }
-          />
+          <Card.Header title="Scheduled Reports" />
           <Card.Body>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

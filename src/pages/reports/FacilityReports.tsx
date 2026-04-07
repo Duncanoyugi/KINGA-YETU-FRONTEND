@@ -6,28 +6,22 @@ import {
   BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 import { useFacilityPerformance } from '@/features/reports/reportsHooks';
+import { useGetFacilitiesQuery } from '@/features/facilities/facilitiesHooks';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Spinner } from '@/components/common/Spinner';
 import { Table } from '@/components/common/Table';
-import { Badge } from '@/components/common/Badge';
 import { BarChart } from '@/components/charts/BarChart';
 
 interface Facility {
   id: string;
   name: string;
   type: string;
-  mflCode: string;
+  code?: string;
+  mflCode?: string;
 }
-
-const mockFacilities: Facility[] = [
-  { id: 'fac1', name: 'Nairobi Hospital', type: 'Hospital', mflCode: '12345' },
-  { id: 'fac2', name: 'Kenyatta National', type: 'National Referral', mflCode: '12346' },
-  { id: 'fac3', name: 'Mombasa Hospital', type: 'Hospital', mflCode: '12347' },
-  { id: 'fac4', name: 'Kisumu Clinic', type: 'Clinic', mflCode: '12348' },
-];
 
 export const FacilityReports: React.FC = () => {
   const navigate = useNavigate();
@@ -37,18 +31,14 @@ export const FacilityReports: React.FC = () => {
     startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
   });
+  const { data: facilities = [] } = useGetFacilitiesQuery(undefined);
 
   const { data: performanceData, isLoading, refetch } = useFacilityPerformance(
     selectedFacility?.id || '',
     {
       dateRange,
-      groupBy: 'month',
     }
   );
-
-  const handleSelectFacility = (facility: Facility) => {
-    setSelectedFacility(facility);
-  };
 
   const handleGenerateReport = () => {
     if (!selectedFacility) {
@@ -68,7 +58,7 @@ export const FacilityReports: React.FC = () => {
   const handleExport = () => {
     showToast({
       type: 'info',
-      message: 'Exporting report...',
+      message: 'Use the recent reports list on the reports dashboard to download generated files.',
     });
   };
 
@@ -105,10 +95,16 @@ export const FacilityReports: React.FC = () => {
             <Card.Header title="Select Facility" />
             <Card.Body>
               <div className="space-y-2">
-                {mockFacilities.map((facility) => (
+                {facilities.map((facility) => (
                   <button
                     key={facility.id}
-                    onClick={() => handleSelectFacility(facility)}
+                    onClick={() => setSelectedFacility({
+                      id: facility.id,
+                      name: facility.name,
+                      type: facility.type,
+                      code: facility.code,
+                      mflCode: facility.code,
+                    })}
                     className={`
                       w-full text-left p-3 rounded-lg border transition-colors
                       ${
@@ -194,7 +190,7 @@ export const FacilityReports: React.FC = () => {
                     <Card>
                       <Card.Body className="text-center">
                         <div className="text-2xl font-bold text-primary-600">
-                          {performanceData.summary.coverageRate}%
+                          {performanceData.coverageRate.toFixed(1)}%
                         </div>
                         <div className="text-sm text-gray-600">Coverage Rate</div>
                       </Card.Body>
@@ -202,25 +198,25 @@ export const FacilityReports: React.FC = () => {
                     <Card>
                       <Card.Body className="text-center">
                         <div className="text-2xl font-bold text-green-600">
-                          {performanceData.summary.totalVaccinations}
+                          {performanceData.totalImmunizations}
                         </div>
-                        <div className="text-sm text-gray-600">Total Vaccinations</div>
+                        <div className="text-sm text-gray-600">Total Immunizations</div>
                       </Card.Body>
                     </Card>
                     <Card>
                       <Card.Body className="text-center">
                         <div className="text-2xl font-bold text-yellow-600">
-                          {performanceData.summary.uniqueChildren}
+                          {performanceData.timelinessRate.toFixed(1)}%
                         </div>
-                        <div className="text-sm text-gray-600">Unique Children</div>
+                        <div className="text-sm text-gray-600">Timeliness Rate</div>
                       </Card.Body>
                     </Card>
                     <Card>
                       <Card.Body className="text-center">
                         <div className="text-2xl font-bold text-purple-600">
-                          {performanceData.summary.wastageRate}%
+                          {performanceData.performanceScore.toFixed(1)}
                         </div>
-                        <div className="text-sm text-gray-600">Wastage Rate</div>
+                        <div className="text-sm text-gray-600">Performance Score</div>
                       </Card.Body>
                     </Card>
                   </div>
@@ -230,9 +226,9 @@ export const FacilityReports: React.FC = () => {
                     <Card.Header title="Monthly Performance" />
                     <Card.Body>
                       <BarChart
-                        data={performanceData.monthly.map(m => ({
+                        data={performanceData.monthlyTrends.map((m: any) => ({
                           label: m.month,
-                          value: m.vaccinations,
+                          value: m.immunizations,
                         }))}
                         height={300}
                         showValues
@@ -240,22 +236,19 @@ export const FacilityReports: React.FC = () => {
                     </Card.Body>
                   </Card>
 
-                  {/* Vaccine Stock */}
+                  {/* Vaccine Breakdown */}
                   <Card>
-                    <Card.Header title="Vaccine Stock Status" />
+                    <Card.Header title="Vaccine Breakdown" />
                     <Card.Body>
                       <Table
-                        data={performanceData.vaccineStock}
+                        data={performanceData.vaccineBreakdown}
                         columns={[
                           { header: 'Vaccine', accessor: (row) => row.vaccineName },
-                          { header: 'Opening', accessor: (row) => row.openingStock },
-                          { header: 'Received', accessor: (row) => row.received },
-                          { header: 'Administered', accessor: (row) => row.administered },
-                          { header: 'Wastage', accessor: (row) => row.wastage },
+                          { header: 'Count', accessor: (row) => row.count },
                           {
-                            header: 'Closing',
+                            header: 'Share',
                             accessor: (row) => (
-                              <span className="font-medium">{row.closingStock}</span>
+                              <span className="font-medium">{row.percentage.toFixed(1)}%</span>
                             ),
                           },
                         ]}
@@ -263,39 +256,26 @@ export const FacilityReports: React.FC = () => {
                     </Card.Body>
                   </Card>
 
-                  {/* Staff Performance */}
+                  {/* Recommendations */}
                   <Card>
-                    <Card.Header title="Staff Performance" />
+                    <Card.Header title="Recommendations" />
                     <Card.Body>
-                      <Table
-                        data={performanceData.staff}
-                        columns={[
-                          { header: 'Name', accessor: (row) => row.name },
-                          { header: 'Role', accessor: (row) => row.role },
-                          { header: 'Vaccinations', accessor: (row) => row.vaccinations },
-                          {
-                            header: 'Avg/Day',
-                            accessor: (row) => row.averagePerDay.toFixed(1),
-                          },
-                          {
-                            header: 'Performance',
-                            accessor: (row) => {
-                              const performance = (row.vaccinations / row.averagePerDay) * 100;
-                              return (
-                                <Badge
-                                  variant={
-                                    performance > 100 ? 'success' :
-                                    performance > 80 ? 'warning' : 'danger'
-                                  }
-                                >
-                                  {performance > 100 ? 'Above Target' :
-                                   performance > 80 ? 'Meeting Target' : 'Below Target'}
-                                </Badge>
-                              );
-                            },
-                          },
-                        ]}
-                      />
+                      <div className="space-y-3">
+                        {performanceData.recommendations.length === 0 ? (
+                          <p className="text-sm text-gray-500">
+                            No recommendations available for this period.
+                          </p>
+                        ) : (
+                          performanceData.recommendations.map((recommendation: string) => (
+                            <div
+                              key={recommendation}
+                              className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700"
+                            >
+                              {recommendation}
+                            </div>
+                          ))
+                        )}
+                      </div>
                     </Card.Body>
                   </Card>
 
@@ -303,24 +283,18 @@ export const FacilityReports: React.FC = () => {
                   <Card>
                     <Card.Header title="Facility Rankings" />
                     <Card.Body>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="text-center p-4 bg-blue-50 rounded-lg">
                           <div className="text-2xl font-bold text-blue-600">
-                            #{performanceData.rankings.withinCounty}
+                            {performanceData.ranking ? `#${performanceData.ranking}` : 'N/A'}
                           </div>
-                          <div className="text-sm text-gray-600">Within County</div>
+                          <div className="text-sm text-gray-600">Current Rank</div>
                         </div>
                         <div className="text-center p-4 bg-green-50 rounded-lg">
                           <div className="text-2xl font-bold text-green-600">
-                            #{performanceData.rankings.withinRegion}
+                            {performanceData.totalRanked || 0}
                           </div>
-                          <div className="text-sm text-gray-600">Within Region</div>
-                        </div>
-                        <div className="text-center p-4 bg-purple-50 rounded-lg">
-                          <div className="text-2xl font-bold text-purple-600">
-                            #{performanceData.rankings.nationally}
-                          </div>
-                          <div className="text-sm text-gray-600">Nationally</div>
+                          <div className="text-sm text-gray-600">Facilities Ranked</div>
                         </div>
                       </div>
                     </Card.Body>
