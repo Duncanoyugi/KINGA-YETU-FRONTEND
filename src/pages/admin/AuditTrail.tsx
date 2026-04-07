@@ -18,6 +18,7 @@ import { Spinner } from '@/components/common/Spinner';
 import { Pagination } from '@/components/common/Pagination';
 import { Tabs } from '@/components/common/Tabs';
 import { formatDate, formatRelativeTime } from '@/utils/dateHelpers';
+import { apiService } from '@/services/api/all';
 
 interface AuditLog {
   id: string;
@@ -39,64 +40,6 @@ interface AuditLog {
   status: 'SUCCESS' | 'FAILURE';
   details?: string;
 }
-
-const mockLogs: AuditLog[] = [
-  {
-    id: '1',
-    timestamp: new Date().toISOString(),
-    user: {
-      id: 'user1',
-      name: 'Admin User',
-      email: 'admin@immunitrack.ke',
-      role: 'ADMIN',
-    },
-    action: 'CREATE',
-    entityType: 'CHILD',
-    entityId: 'child123',
-    entityName: 'John Doe Jr',
-    newData: { name: 'John Doe Jr', dob: '2024-01-01' },
-    ipAddress: '192.168.1.100',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    status: 'SUCCESS',
-  },
-  {
-    id: '2',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    user: {
-      id: 'user2',
-      name: 'Dr. Jane Smith',
-      email: 'jane@hospital.ke',
-      role: 'HEALTH_WORKER',
-    },
-    action: 'UPDATE',
-    entityType: 'IMMUNIZATION',
-    entityId: 'imm456',
-    entityName: 'BCG Vaccination',
-    oldData: { status: 'SCHEDULED' },
-    newData: { status: 'ADMINISTERED' },
-    ipAddress: '192.168.1.101',
-    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)',
-    status: 'SUCCESS',
-  },
-  {
-    id: '3',
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
-    user: {
-      id: 'user1',
-      name: 'Admin User',
-      email: 'admin@immunitrack.ke',
-      role: 'ADMIN',
-    },
-    action: 'DELETE',
-    entityType: 'USER',
-    entityId: 'user789',
-    entityName: 'john.doe@example.com',
-    ipAddress: '192.168.1.100',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    status: 'SUCCESS',
-    details: 'User account deactivated',
-  },
-];
 
 const actionColors = {
   CREATE: 'success',
@@ -136,9 +79,9 @@ export const AuditTrail: React.FC = () => {
   const { can } = usePermissions();
   const { showToast } = useToast();
   
-  const [logs] = useState<AuditLog[]>(mockLogs);
-  const [filteredLogs, setFilteredLogs] = useState<AuditLog[]>(mockLogs);
-  const [isLoading, _setIsLoading] = useState(false);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEntity, setSelectedEntity] = useState('all');
   const [selectedAction, setSelectedAction] = useState('all');
@@ -159,61 +102,67 @@ export const AuditTrail: React.FC = () => {
     { id: 'system', label: 'System Events' },
   ];
 
-  const filterLogs = () => {
-    let filtered = [...logs];
-
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(log =>
-        log.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.entityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.entityId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.ipAddress.includes(searchTerm)
-      );
-    }
-
-    // Apply entity filter
-    if (selectedEntity !== 'all') {
-      filtered = filtered.filter(log => log.entityType === selectedEntity);
-    }
-
-    // Apply action filter
-    if (selectedAction !== 'all') {
-      filtered = filtered.filter(log => log.action === selectedAction);
-    }
-
-    // Apply date range filter
-    const startDate = new Date(dateRange.startDate).setHours(0, 0, 0, 0);
-    const endDate = new Date(dateRange.endDate).setHours(23, 59, 59, 999);
-    filtered = filtered.filter(log => {
-      const logDate = new Date(log.timestamp).getTime();
-      return logDate >= startDate && logDate <= endDate;
-    });
-
-    // Apply tab filter
-    if (activeTab === 'user') {
-      filtered = filtered.filter(log => ['LOGIN', 'LOGOUT'].includes(log.action));
-    } else if (activeTab === 'data') {
-      filtered = filtered.filter(log => ['CREATE', 'UPDATE', 'DELETE'].includes(log.action));
-    } else if (activeTab === 'system') {
-      filtered = filtered.filter(log => log.entityType === 'SYSTEM');
-    }
-
-    setFilteredLogs(filtered);
-    setCurrentPage(1);
-  };
-
   React.useEffect(() => {
-    filterLogs();
-  }, [searchTerm, selectedEntity, selectedAction, dateRange, activeTab, logs]);
+    const loadLogs = async () => {
+      setIsLoading(true);
+      try {
+        const response = await apiService.system.getAuditLogs({
+          page: currentPage,
+          limit: pageSize,
+          search: searchTerm || undefined,
+          entityType: selectedEntity !== 'all' ? selectedEntity : activeTab === 'system' ? 'SYSTEM' : undefined,
+          action: selectedAction !== 'all' ? selectedAction : undefined,
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        });
+
+        const payload = (response as any).data;
+        let nextLogs = payload.data || [];
+
+        if (activeTab === 'user') {
+          nextLogs = nextLogs.filter((log: AuditLog) => ['LOGIN', 'LOGOUT'].includes(log.action));
+        } else if (activeTab === 'data') {
+          nextLogs = nextLogs.filter((log: AuditLog) => ['CREATE', 'UPDATE', 'DELETE'].includes(log.action));
+        }
+
+        setLogs(nextLogs);
+        setTotalLogs(payload.pagination?.total || nextLogs.length);
+      } catch (error) {
+        showToast({
+          type: 'error',
+          message: 'Failed to load audit logs',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadLogs();
+  }, [activeTab, currentPage, dateRange, searchTerm, selectedAction, selectedEntity, showToast]);
 
   const handleExport = () => {
-    showToast({
-      type: 'info',
-      message: 'Exporting audit logs...',
-    });
-    // Implement export logic
+    const headers = ['Timestamp', 'User', 'Email', 'Role', 'Action', 'EntityType', 'EntityId', 'Status'];
+    const rows = logs.map(log => [
+      log.timestamp,
+      log.user.name,
+      log.user.email,
+      log.user.role,
+      log.action,
+      log.entityType,
+      log.entityId,
+      log.status,
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'audit-logs.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const getActionIcon = (action: string) => {
@@ -287,11 +236,6 @@ export const AuditTrail: React.FC = () => {
       ),
     },
   ];
-
-  const paginatedLogs = filteredLogs.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
 
   if (!isAdmin && !isSuperAdmin && !can('audit:view')) {
     return (
@@ -402,16 +346,16 @@ export const AuditTrail: React.FC = () => {
           ) : (
             <>
               <Table
-                data={paginatedLogs}
+                data={logs}
                 columns={columns}
                 emptyMessage="No audit logs found"
               />
 
-              {filteredLogs.length > pageSize && (
+              {totalLogs > pageSize && (
                 <div className="mt-4">
                   <Pagination
                     currentPage={currentPage}
-                    totalPages={Math.ceil(filteredLogs.length / pageSize)}
+                    totalPages={Math.ceil(totalLogs / pageSize)}
                     onPageChange={setCurrentPage}
                   />
                 </div>

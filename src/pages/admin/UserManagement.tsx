@@ -38,8 +38,6 @@ import type { User } from '@/features/users/usersAPI';
 const roles = [
   { value: 'PARENT', label: 'Parent' },
   { value: 'HEALTH_WORKER', label: 'Health Worker' },
-  { value: 'FACILITY_ADMIN', label: 'Facility Administrator' },
-  { value: 'COUNTY_ADMIN', label: 'County Administrator' },
   { value: 'ADMIN', label: 'Administrator' },
   { value: 'SUPER_ADMIN', label: 'Super Administrator' },
 ];

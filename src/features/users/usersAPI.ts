@@ -13,8 +13,28 @@ export interface User {
   isPhoneVerified: boolean;
   lastLoginAt?: string;
   createdAt: string;
+  updatedAt?: string;
   facilityId?: string;
   facilityName?: string;
+  profile?: {
+    county?: string;
+    subCounty?: string;
+    address?: string;
+  };
+  healthWorker?: {
+    licenseNumber?: string;
+    qualification?: string;
+    specialization?: string;
+    facility?: {
+      id: string;
+      name: string;
+      code: string;
+    };
+  };
+  adminProfile?: {
+    department?: string;
+    permissions?: string;
+  };
 }
 
 export interface UserFilter {
@@ -34,6 +54,23 @@ export interface UserStats {
   unverifiedEmails: number;
   healthWorkers: number;
   byRole: Record<string, number>;
+}
+
+export interface UserPayload {
+  fullName?: string;
+  email?: string;
+  phoneNumber?: string;
+  password?: string;
+  role?: string;
+  county?: string;
+  subCounty?: string;
+  address?: string;
+  isActive?: boolean;
+  licenseNumber?: string;
+  qualification?: string;
+  specialization?: string;
+  facilityId?: string;
+  department?: string;
 }
 
 export const usersAPI = createApi({
@@ -71,7 +108,7 @@ export const usersAPI = createApi({
     getUserStats: builder.query<UserStats, void>({
       query: () => '/stats',
     }),
-    createUser: builder.mutation<User, Partial<User>>({
+    createUser: builder.mutation<User, UserPayload>({
       query: (data) => ({
         url: '/',
         method: 'POST',
@@ -79,7 +116,7 @@ export const usersAPI = createApi({
       }),
       invalidatesTags: ['Users'],
     }),
-    updateUser: builder.mutation<User, { id: string; data: Partial<User> }>({
+    updateUser: builder.mutation<User, { id: string; data: UserPayload }>({
       query: ({ id, data }) => ({
         url: `/${id}`,
         method: 'PATCH',

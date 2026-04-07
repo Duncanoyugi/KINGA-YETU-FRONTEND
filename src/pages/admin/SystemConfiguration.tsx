@@ -19,6 +19,8 @@ import { Tabs } from '@/components/common/Tabs';
 import { Alert } from '@/components/common/Alert';
 import { Switch } from '@/components/common/Switch';
 import { Modal } from '@/components/common/Modal';
+import { Spinner } from '@/components/common/Spinner';
+import { apiService } from '@/services/api/all';
 
 interface SystemConfig {
   general: {
@@ -158,6 +160,7 @@ export const SystemConfiguration: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const tabs = [
     { id: 'general', label: 'General', icon: Cog6ToothIcon },
@@ -167,11 +170,28 @@ export const SystemConfiguration: React.FC = () => {
     { id: 'api', label: 'API Settings', icon: ServerIcon },
   ];
 
+  React.useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const response = await apiService.system.getConfig();
+        setConfig((response as any).data);
+      } catch (error) {
+        showToast({
+          type: 'error',
+          message: 'Failed to load system configuration',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadConfig();
+  }, [showToast]);
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await apiService.system.updateConfig(config);
       showToast({
         type: 'success',
         message: 'Configuration saved successfully',
@@ -200,8 +220,7 @@ export const SystemConfiguration: React.FC = () => {
         type: 'info',
         message: 'Creating system backup...',
       });
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await apiService.system.createBackup();
       showToast({
         type: 'success',
         message: 'Backup created successfully',
@@ -221,11 +240,11 @@ export const SystemConfiguration: React.FC = () => {
         type: 'info',
         message: 'Restoring from backup...',
       });
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await apiService.system.restoreBackup();
+      setConfig((await apiService.system.getConfig() as any).data);
       showToast({
         type: 'success',
-        message: 'System restored successfully',
+        message: (response as any).data?.success ? 'System restored successfully' : 'No backup was available to restore',
       });
     } catch (error) {
       showToast({
@@ -241,6 +260,14 @@ export const SystemConfiguration: React.FC = () => {
         variant="danger"
         message="You don't have permission to access this page"
       />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner size="lg" />
+      </div>
     );
   }
 

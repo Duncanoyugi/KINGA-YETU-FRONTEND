@@ -470,8 +470,8 @@ export const apiService = {
     createBackup: () =>
       api.post(API_ENDPOINTS.SYSTEM.BACKUP),
       
-    restoreBackup: (data: FormData) =>
-      api.upload(API_ENDPOINTS.SYSTEM.RESTORE, data),
+    restoreBackup: () =>
+      api.post(API_ENDPOINTS.SYSTEM.RESTORE),
       
     getAuditLogs: (params?: any) =>
       api.get(API_ENDPOINTS.SYSTEM.AUDIT_LOGS, { params }),

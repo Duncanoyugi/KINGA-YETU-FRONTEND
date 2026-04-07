@@ -29,9 +29,18 @@ import ReportsDashboard from '../pages/reports/ReportsDashboard';
 import AnalyticsOverview from '../pages/analytics/AnalyticsOverview';
 import UserManagement from '../pages/admin/UserManagement';
 import FacilityManagement from '../pages/admin/FacilityManagement';
+import AddUser from '../pages/admin/AddUser';
+import UserDetails from '../pages/admin/UserDetails';
+import EditUser from '../pages/admin/EditUser';
+import AddFacility from '../pages/admin/AddFacility';
+import FacilityDetails from '../pages/admin/FacilityDetails';
+import EditFacility from '../pages/admin/EditFacility';
 import VaccineInventory from '../pages/vaccines/VaccineInventory';
 import SystemConfiguration from '../pages/admin/SystemConfiguration';
 import AuditTrail from '../pages/admin/AuditTrail';
+import SystemHealth from '../pages/admin/SystemHealth';
+import SecurityScan from '../pages/admin/SecurityScan';
+import DatabaseOverview from '../pages/admin/DatabaseOverview';
 import CoverageMap from '../components/widgets/CoverageMap/CoverageMap';
 import Settings from '../pages/settings/Settings';
 import { Login } from '../pages/auth/Login';
@@ -81,7 +90,13 @@ const AppRouter: React.FC = () => {
           <Route path={ROUTES.REPORTS_DASHBOARD} element={<ReportsDashboard />} />
           <Route path={ROUTES.ANALYTICS_OVERVIEW} element={<AnalyticsOverview />} />
           <Route path={ROUTES.USER_MANAGEMENT} element={<UserManagement />} />
+          <Route path={ROUTES.ADD_USER} element={<AddUser />} />
+          <Route path={ROUTES.USER_DETAILS} element={<UserDetails />} />
+          <Route path={ROUTES.EDIT_USER} element={<EditUser />} />
           <Route path={ROUTES.FACILITY_MANAGEMENT} element={<FacilityManagement />} />
+          <Route path={ROUTES.ADD_FACILITY} element={<AddFacility />} />
+          <Route path={ROUTES.FACILITY_DETAILS} element={<FacilityDetails />} />
+          <Route path={ROUTES.EDIT_FACILITY} element={<EditFacility />} />
           <Route path={ROUTES.VACCINE_MANAGEMENT} element={<VaccineInventory />} />
           <Route path={ROUTES.SYSTEM_CONFIG} element={<SystemConfiguration />} />
           <Route path={ROUTES.AUDIT_LOGS} element={<AuditTrail />} />
@@ -104,10 +119,10 @@ const AppRouter: React.FC = () => {
           <Route path={ROUTES.COVERAGE_ANALYTICS} element={<Navigate to={ROUTES.ANALYTICS_OVERVIEW} replace />} />
           <Route path={ROUTES.DROPOUT_ANALYTICS} element={<Navigate to={ROUTES.ANALYTICS_OVERVIEW} replace />} />
           <Route path={ROUTES.PREDICTIVE_ANALYTICS} element={<Navigate to={ROUTES.ANALYTICS_OVERVIEW} replace />} />
-          <Route path={ROUTES.SYSTEM_HEALTH} element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
-          <Route path={ROUTES.SECURITY} element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
-          <Route path={ROUTES.DATABASE} element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
-          <Route path={ROUTES.SECURITY_SCAN} element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
+          <Route path={ROUTES.SYSTEM_HEALTH} element={<SystemHealth />} />
+          <Route path={ROUTES.SECURITY} element={<SecurityScan />} />
+          <Route path={ROUTES.DATABASE} element={<DatabaseOverview />} />
+          <Route path={ROUTES.SECURITY_SCAN} element={<SecurityScan />} />
           <Route path={ROUTES.HEALTH_TIPS} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
           <Route path={ROUTES.ACTIVITY_HISTORY} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
         </Route>
@@ -152,4 +167,3 @@ const AppRouter: React.FC = () => {
 };
 
 export default AppRouter;
-

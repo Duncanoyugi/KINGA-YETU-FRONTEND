@@ -31,7 +31,7 @@ const facilityTypes = [
   { value: 'HEALTH_CENTER', label: 'Health Center' },
   { value: 'DISPENSARY', label: 'Dispensary' },
   { value: 'CLINIC', label: 'Clinic' },
-  { value: 'MOBILE_CLINIC', label: 'Mobile Clinic' },
+  { value: 'Maternity', label: 'Maternity' },
 ];
 
 const counties = [
@@ -99,17 +99,8 @@ const FacilityManagement: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'OPERATIONAL':
-        return <Badge variant="success">Operational</Badge>;
-      case 'NON_OPERATIONAL':
-        return <Badge variant="danger">Non-Operational</Badge>;
-      case 'UNDER_CONSTRUCTION':
-        return <Badge variant="warning">Under Construction</Badge>;
-      default:
-        return <Badge variant="default">{status}</Badge>;
-    }
+  const getStatusBadge = (isActive?: boolean) => {
+    return isActive ? <Badge variant="success">Active</Badge> : <Badge variant="danger">Inactive</Badge>;
   };
 
   const tabs = [
@@ -160,25 +151,25 @@ const FacilityManagement: React.FC = () => {
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {statsData?.active || facilities.filter(f => f.status === 'OPERATIONAL').length}
+              {statsData?.active || facilities.filter(f => f.isActive).length}
             </div>
-            <div className="text-sm text-gray-600">Operational</div>
+            <div className="text-sm text-gray-600">Active</div>
           </Card.Body>
         </Card>
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {facilities.reduce((sum, f) => sum + (f.staffCount || 0), 0)}
+              {new Set(facilities.map(f => f.county).filter(Boolean)).size}
             </div>
-            <div className="text-sm text-gray-600">Total Staff</div>
+            <div className="text-sm text-gray-600">Counties Covered</div>
           </Card.Body>
         </Card>
         <Card>
           <Card.Body className="text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {facilities.reduce((sum, f) => sum + (f.bedCapacity || 0), 0)}
+              {facilities.filter(f => !f.isActive).length}
             </div>
-            <div className="text-sm text-gray-600">Total Beds</div>
+            <div className="text-sm text-gray-600">Inactive</div>
           </Card.Body>
         </Card>
       </div>
@@ -261,7 +252,7 @@ const FacilityManagement: React.FC = () => {
                         <p className="text-sm text-gray-500">MFL: {facility.mflCode}</p>
                       </div>
                     </div>
-                    {getStatusBadge(facility.status)}
+                    {getStatusBadge(facility.isActive)}
                   </div>
 
                   <div className="mt-4 space-y-2">
@@ -271,41 +262,22 @@ const FacilityManagement: React.FC = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <PhoneIcon className="h-4 w-4 mr-2" />
-                      {facility.phone}
+                      {facility.phone || 'No phone provided'}
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <EnvelopeIcon className="h-4 w-4 mr-2" />
-                      {facility.email}
+                      {facility.email || 'No email provided'}
                     </div>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {facility.services?.slice(0, 3).map(service => (
-                      <Badge key={service} variant="default" size="sm">
-                        {service}
-                      </Badge>
-                    ))}
-                    {facility.services?.length > 3 && (
-                      <Badge variant="default" size="sm">
-                        +{facility.services.length - 3}
-                      </Badge>
-                    )}
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-sm">
                     <div>
-                      <span className="text-gray-500">Staff:</span>{' '}
-                      <span className="font-medium">{facility.staffCount}</span>
+                      <span className="text-gray-500">Type:</span>{' '}
+                      <span className="font-medium">{facility.type}</span>
                     </div>
-                    {facility.bedCapacity && (
-                      <div>
-                        <span className="text-gray-500">Beds:</span>{' '}
-                        <span className="font-medium">{facility.bedCapacity}</span>
-                      </div>
-                    )}
                     <div>
-                      <span className="text-gray-500">Level:</span>{' '}
-                      <span className="font-medium">{facility.level}</span>
+                      <span className="text-gray-500">Code:</span>{' '}
+                      <span className="font-medium">{facility.code}</span>
                     </div>
                   </div>
 

@@ -4,27 +4,28 @@ export interface Facility {
   name: string;
   code: string;
   type: FacilityType;
-  address: string;
+  address?: string | null;
   county: string;
   subCounty: string;
-  ward: string;
-  phone: string;
-  email: string;
-  inCharge: string;
-  inChargePhone: string;
-  status: FacilityStatus;
-  services: string[];
-  operatingHours: OperatingHours;
-  // Additional properties used in FacilityManagement
+  ward?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  isActive?: boolean;
   mflCode?: string | null;
-  staffCount?: number | null;
-  bedCapacity?: number | null;
-  level?: FacilityLevel | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export type FacilityType = 'HOSPITAL' | 'HEALTH_CENTER' | 'DISPENSARY' | 'CLINIC' | 'MOBILE_CLINIC' | 'PRIVATE_PRACTICE' | 'MATERNITY' | 'NURSING_HOME';
+export type FacilityType =
+  | 'HOSPITAL'
+  | 'HEALTH_CENTER'
+  | 'DISPENSARY'
+  | 'CLINIC'
+  | 'MOBILE_CLINIC'
+  | 'PRIVATE_PRACTICE'
+  | 'MATERNITY'
+  | 'NURSING_HOME'
+  | 'Maternity';
 
 export type FacilityStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED' | 'OPERATIONAL' | 'NON_OPERATIONAL' | 'UNDER_CONSTRUCTION' | 'CLOSED' | 'TEMPORARILY_CLOSED';
 
@@ -49,7 +50,7 @@ export interface TimeRange {
 export interface CreateFacilityRequest {
   name: string;
   code: string;
-  type: FacilityType;
+  type: 'HOSPITAL' | 'HEALTH_CENTER' | 'DISPENSARY' | 'CLINIC' | 'MOBILE_CLINIC' | 'PRIVATE_PRACTICE' | 'MATERNITY' | 'NURSING_HOME';
   mflCode?: string;
   county: string;
   subCounty: string;
@@ -61,14 +62,16 @@ export interface CreateFacilityRequest {
 
 export interface UpdateFacilityRequest {
   name?: string;
+  code?: string;
+  type?: FacilityType;
+  mflCode?: string;
+  county?: string;
+  subCounty?: string;
+  ward?: string;
   address?: string;
   phone?: string;
   email?: string;
-  inCharge?: string;
-  inChargePhone?: string;
-  status?: FacilityStatus;
-  services?: string[];
-  operatingHours?: OperatingHours;
+  isActive?: boolean;
 }
 
 export interface FacilityFilter {
