@@ -149,23 +149,25 @@ export const AddInventory: React.FC = () => {
             onChange={handleInputChange}
             placeholder="e.g., Pfizer, Moderna"
           />
-          
-          <div className="flex gap-4">
-            <Button
-              type="submit"
-              disabled={isSubmitting || !facilityId}
-            >
-              {isSubmitting ? <Spinner size="sm" /> : 'Add Stock'}
-            </Button>
-            
+
+          <Card.Footer className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="secondary"
               onClick={() => navigate('/dashboard/health-worker/inventory')}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-          </div>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting || !facilityId}
+              className="w-full sm:w-auto"
+            >
+              {isSubmitting ? <Spinner size="sm" /> : 'Submit Stock'}
+            </Button>
+          </Card.Footer>
         </form>
       </Card>
     </div>
