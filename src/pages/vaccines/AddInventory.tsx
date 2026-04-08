@@ -150,24 +150,24 @@ export const AddInventory: React.FC = () => {
             placeholder="e.g., Pfizer, Moderna"
           />
 
-          <div className="sticky bottom-0 -mx-6 border-t border-gray-200 bg-green px-6 pt-4 pb-2">
+          <div className="sticky bottom-0 -mx-6 border-t border-gray-200 bg-white dark:bg-gray-900 px-6 pt-4 pb-2">
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate('/dashboard/health-worker/inventory')}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => navigate('/dashboard/health-worker/inventory')}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting || !facilityId}
-              className="w-full sm:w-auto bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-green-300 shadow-sm"
-            >
-              {isSubmitting ? <Spinner size="sm" /> : 'Submit Stock'}
-            </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting || !facilityId}
+                className="w-full sm:w-auto bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 disabled:bg-gray-300 shadow-sm"
+              >
+                {isSubmitting ? <Spinner size="sm" /> : 'Submit Stock'}
+              </Button>
             </div>
           </div>
         </form>
