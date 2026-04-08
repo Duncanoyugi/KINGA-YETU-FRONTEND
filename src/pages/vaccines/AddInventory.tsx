@@ -156,7 +156,7 @@ export const AddInventory: React.FC = () => {
                 type="button"
                 variant="secondary"
                 onClick={() => navigate('/dashboard/health-worker/inventory')}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto text-black"
               >
                 Cancel
               </Button>
