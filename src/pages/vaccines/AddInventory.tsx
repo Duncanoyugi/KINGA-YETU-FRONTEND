@@ -150,7 +150,8 @@ export const AddInventory: React.FC = () => {
             placeholder="e.g., Pfizer, Moderna"
           />
 
-          <Card.Footer className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <div className="sticky bottom-0 -mx-6 border-t border-gray-200 bg-green px-6 pt-4 pb-2">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="secondary"
@@ -163,11 +164,12 @@ export const AddInventory: React.FC = () => {
             <Button
               type="submit"
               disabled={isSubmitting || !facilityId}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto shadow-sm"
             >
               {isSubmitting ? <Spinner size="sm" /> : 'Submit Stock'}
             </Button>
-          </Card.Footer>
+            </div>
+          </div>
         </form>
       </Card>
     </div>
