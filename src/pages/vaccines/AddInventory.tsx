@@ -164,7 +164,7 @@ export const AddInventory: React.FC = () => {
             <Button
               type="submit"
               disabled={isSubmitting || !facilityId}
-              className="w-full sm:w-auto shadow-sm"
+              className="w-full sm:w-auto bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-green-300 shadow-sm"
             >
               {isSubmitting ? <Spinner size="sm" /> : 'Submit Stock'}
             </Button>
