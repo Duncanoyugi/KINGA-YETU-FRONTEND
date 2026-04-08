@@ -36,8 +36,9 @@ interface UserStats {
 }
 
 interface VaccineStats {
-  monthlyTotal: number;
-  growth: number;
+  totalVaccines: number;
+  totalAdministrations: number;
+  activeVaccines: number;
 }
 
 interface CoverageStats {
@@ -463,13 +464,13 @@ export const AdminDashboard: React.FC = () => {
           />
           <StatsCard
             title="Vaccinations"
-            value={`+${formatNumber(vaccineStats?.monthlyTotal || 1205)}`}
+            value={formatNumber(vaccineStats?.totalAdministrations || 0)}
             icon={<BeakerIcon className="h-6 w-6" />}
             color="success"
             trend={{
-              value: vaccineStats?.growth || 8,
+              value: vaccineStats?.activeVaccines || 0,
               direction: 'up' as const,
-              label: 'vs last month',
+              label: 'active vaccines',
             }}
           />
           <StatsCard
