@@ -3,7 +3,6 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   BuildingOfficeIcon,
   UserGroupIcon,
-  BeakerIcon,
   DocumentChartBarIcon,
   Cog6ToothIcon,
   ShieldCheckIcon,
@@ -80,7 +79,6 @@ const AdminSidebar: React.FC = () => {
     { id: 'dashboard', label: 'Dashboard', icon: ChartBarIcon, path: ROUTES.ADMIN_DASHBOARD },
     { id: 'facilities', label: 'Facilities', icon: BuildingOfficeIcon, path: ROUTES.FACILITY_MANAGEMENT },
     { id: 'users', label: 'Users', icon: UserGroupIcon, path: ROUTES.USER_MANAGEMENT },
-    { id: 'vaccines', label: 'Vaccines', icon: BeakerIcon, path: ROUTES.VACCINE_MANAGEMENT },
     { id: 'analytics', label: 'Analytics', icon: ChartBarIcon, path: ROUTES.ANALYTICS_OVERVIEW },
     { id: 'reports', label: 'Reports', icon: DocumentChartBarIcon, path: ROUTES.REPORTS_DASHBOARD },
   ];
