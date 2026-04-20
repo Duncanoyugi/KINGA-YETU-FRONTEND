@@ -52,10 +52,10 @@ import {
 } from 'lucide-react';
 
 // API imports
-import { useGetSchedulesQuery, useGetUpcomingSchedulesQuery, useGetFacilityUpcomingSchedulesQuery } from '@/features/schedules/schedulesAPI';
+import { useGetSchedulesQuery, useGetFacilityUpcomingSchedulesQuery } from '@/features/schedules/schedulesAPI';
 import { useGetChildrenQuery } from '@/features/children/childrenAPI';
 import { useGetInventoryQuery, useGetStockAlertsQuery } from '@/features/vaccines/vaccinesAPI';
-import { useGetRealTimeStatsQuery, useGetDashboardMetricsQuery, useGetHealthWorkerDashboardStatsQuery } from '@/features/analytics/analyticsAPI';
+import { useGetHealthWorkerDashboardStatsQuery } from '@/features/analytics/analyticsAPI';
 
 import ChildrenList from '@/pages/children/ChildrenList';
 
@@ -419,7 +419,11 @@ const Header: React.FC<{
   date: string;
   onInventoryClick: () => void;
   onRegisterClick: () => void;
-}> = ({ greeting, facilityName, date, onInventoryClick, onRegisterClick }) => {
+  hwStats?: {
+    vaccinationsThisMonth: number;
+    totalChildren: number;
+  };
+}> = ({ greeting, facilityName, date, onInventoryClick, onRegisterClick, hwStats }) => {
   const { user } = useAuth();
   return (
     <motion.div
@@ -1347,6 +1351,7 @@ const HealthWorkerDashboard: React.FC = () => {
                   date={currentDate}
                   onInventoryClick={handleInventoryClick}
                   onRegisterClick={handleRegisterClick}
+                  hwStats={hwStats}
                 />
                 {/* Stats Grid */}
                 {isLoading ? (
